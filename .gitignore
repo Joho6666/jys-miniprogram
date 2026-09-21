@@ -1,0 +1,30 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+.DS_Store
+dist
+unpackage
+*.local
+
+# 本地环境变量（接口地址 / 凭据只从环境变量读取，不入库）
+.env
+.env.local
+.env.*.local
+
+# 工具与编辑器生成的临时状态
+.mimosa
+
+# Editor directories and files
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

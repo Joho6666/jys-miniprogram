@@ -1,0 +1,63 @@
+import type { Message } from '@/types';
+import { at } from './db';
+
+/** 初始消息（与任务/提交单严格对应） */
+export const MOCK_MESSAGES: Message[] = [
+  {
+    id: 'msg-001',
+    type: 'TASK',
+    event: 'DUE_SOON',
+    title: '省级一流课程申报材料提交即将截止',
+    body: `距离截止时间（${at(2, '18:00')}）不足 3 天，请尽快整理并上传申报材料。`,
+    source: '教务科研处 · 限期申报',
+    time: at(0, '08:20'),
+    read: false,
+    taskId: 'task-001',
+  },
+  {
+    id: 'msg-003',
+    type: 'REVIEW',
+    event: 'REVIEW_APPROVED',
+    title: '课程教学大纲提交已审核通过',
+    body: '您提交的材料已通过审核，相关文件已归档至教研室教学档案。',
+    source: '工程管理教研室 · 材料归档',
+    time: at(-1, '10:15'),
+    read: true,
+    taskId: 'task-003',
+    submissionId: 'sub-003-v2',
+  },
+  {
+    id: 'msg-002',
+    type: 'REVIEW',
+    event: 'REVIEW_REJECTED',
+    title: '青年教师听课记录提交已被驳回',
+    body: '您提交的材料未通过审核，请查看审核意见并及时修改后重新提交。',
+    source: '教学督导组 · 业务审核',
+    time: at(-2, '16:30'),
+    read: false,
+    taskId: 'task-004',
+    submissionId: 'sub-004-v1',
+    opinion: '缺少院系领导盖章页，请补充后重新提交。',
+  },
+  {
+    id: 'msg-005',
+    type: 'TASK',
+    event: 'NEW_TASK',
+    title: '新增任务：教研室经费使用情况汇报',
+    body: `李主任向您分派了新任务，截止时间为 ${at(1, '18:00')}，请及时处理。`,
+    source: '经费管理组 · 定期汇报',
+    time: at(-2, '09:50'),
+    read: true,
+    taskId: 'task-006',
+  },
+  {
+    id: 'msg-004',
+    type: 'SYSTEM',
+    event: 'NOTICE',
+    title: '2026年秋季学期教研活动安排',
+    body: '教研室定于本周五 14:30 召开期初教学检查与课程思政建设研讨会，请各位老师提前准备发言提纲。',
+    source: '工程管理教研室 · 全体教师',
+    time: at(-3, '09:00'),
+    read: true,
+  },
+];

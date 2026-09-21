@@ -1,0 +1,59 @@
+// =====================================================================
+// Design Tokens —— 全项目唯一样式令牌来源
+// 基准:Stitch「Campus Productivity WeChat Native」正文规范(已修复旧 M3 token)
+// 规则:任何页面/组件禁止自造颜色,一律引用本文件变量
+// =====================================================================
+
+// ---- Primary ----
+$primary: #1677ff;          // 品牌蓝:主按钮 / 选中态 / 链接
+$primary-pressed: #0958d9;  // 主按钮按压
+$primary-light: #e8f3ff;    // 浅蓝底(选中 chip / 图标底)
+$primary-light-border: #91caff;
+
+// ---- 中性 ----
+$bg: #f5f7fa;               // 页面画布
+$surface: #ffffff;          // 卡片 / 分组面
+$border: #e5e7eb;           // 发丝分割线 / 描边
+$pressed: #f2f3f5;          // 行按压态
+$text-1: #1d2129;           // 主文字
+$text-2: #4e5969;           // 次文字
+$text-3: #86909c;           // 辅助文字(时间戳 / 计数)
+$text-disabled: #c9cdd4;
+
+// ---- 语义状态 ----
+$success: #52c41a;  $success-bg: #f6ffed;  $success-border: #b7eb8f;
+$warning: #fa8c16;  $warning-bg: #fff7e6;  $warning-border: #ffd591;
+$review: #faad14;   $review-bg: #fffbe6;   $review-border: #ffe58f;
+$danger: #ff4d4f;   $danger-bg: #fff1f0;   $danger-border: #ffa39e;
+
+// ---- 遮罩 / 反白 ----
+$mask: rgba(0, 0, 0, 0.45);
+$white: #ffffff;
+
+// ---- 圆角(设计稿 px × 2 = rpx) ----
+$radius-card: 16rpx;   // 卡片 8px
+$radius-btn: 16rpx;    // 按钮 8px
+$radius-input: 12rpx;  // 搜索框 6px
+$radius-tag: 8rpx;     // 状态标签 4px
+
+// ---- 关键尺寸 ----
+$nav-height: 88rpx;        // 自定义导航内容高 44px
+$btn-height: 88rpx;        // 主按钮 44px
+$btn-height-sm: 64rpx;    // 紧凑按钮 32px
+$row-height: 108rpx;       // 分组行高 54px
+$tabbar-height: 100rpx;    // 底部栏 50px(另加安全区)
+$screen-margin: 32rpx;     // 屏幕左右边距 16px
+$card-padding: 32rpx;      // 卡片内边距 16px
+
+// ---- 字号(rpx) ----
+$font-hero: 48rpx;    // 24px 大数字
+$font-title: 40rpx;  // 20px 页面大标题
+$font-nav: 34rpx;    // 17px 导航标题
+$font-md: 30rpx;     // 15px 行标题 / 模块标题
+$font-body: 28rpx;   // 14px 正文
+$font-label: 26rpx;  // 13px
+$font-tag: 24rpx;     // 12px 辅助
+$font-xs: 22rpx;     // 11px 状态标签
+
+// ---- 字体栈(禁止引入任何网络字体) ----
+$font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;

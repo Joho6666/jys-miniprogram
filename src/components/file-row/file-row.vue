@@ -1,0 +1,98 @@
+<template>
+  <view class="file-row" hover-class="file-row--hover" @tap="onTap">
+    <view class="file-row__tile" :style="{ background: meta.bg, color: meta.color }">
+      <text class="file-row__tile-text">{{ meta.tile }}</text>
+    </view>
+
+    <view class="file-row__main">
+      <text class="file-row__name">{{ name }}</text>
+      <text class="file-row__sub">{{ subText }}</text>
+    </view>
+
+    <view class="file-row__op">
+      <uni-icons v-if="downloadable" type="download" size="18" color="#1677FF" />
+    </view>
+  </view>
+</template>
+
+<script setup lang="ts">
+import { computed } from 'vue';
+import type { FileFormat } from '@/types';
+import { FORMAT_META } from '@/types';
+import { sizeText } from '@/services/format';
+
+/** 附件行（任务模板附件 / 已提交文件） */
+interface Props {
+  name: string;
+  format: FileFormat;
+  sizeKB: number;
+  /** 副标题，默认「格式 · 大小」 */
+  sub?: string;
+  downloadable?: boolean;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  sub: '',
+  downloadable: true,
+});
+
+const emit = defineEmits<{ (e: 'tap'): void }>();
+
+const meta = computed(() => FORMAT_META[props.format]);
+const subText = computed(() => props.sub || `${props.format} · ${sizeText(props.sizeKB)}`);
+
+function onTap(): void {
+  emit('tap');
+}
+</script>
+
+<style lang="scss" scoped>
+.file-row {
+  @include flex-row();
+  padding: 20rpx 0;
+}
+
+.file-row--hover {
+  background: $pressed;
+}
+
+.file-row__tile {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 10rpx;
+  @include flex-center;
+  flex-shrink: 0;
+}
+
+.file-row__tile-text {
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.file-row__main {
+  flex: 1;
+  margin-left: 20rpx;
+  min-width: 0;
+}
+
+.file-row__name {
+  display: block;
+  font-size: $font-body;
+  color: $text-1;
+  @include ellipsis(1);
+}
+
+.file-row__sub {
+  display: block;
+  margin-top: 6rpx;
+  font-size: $font-tag;
+  color: $text-3;
+  @include ellipsis(1);
+}
+
+.file-row__op {
+  width: 56rpx;
+  @include flex-center;
+  flex-shrink: 0;
+}
+</style>

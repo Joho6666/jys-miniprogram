@@ -1,0 +1,60 @@
+{
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+      "^uni-(.*)": "@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue"
+    }
+  },
+  "pages": [
+    {
+      "path": "pages/home/index",
+      "style": { "navigationBarTitleText": "首页" }
+    },
+    {
+      "path": "pages/tasks/index",
+      "style": { "navigationBarTitleText": "我的任务" }
+    },
+    {
+      "path": "pages/messages/index",
+      "style": { "navigationBarTitleText": "消息" }
+    },
+    {
+      "path": "pages/profile/index",
+      "style": { "navigationBarTitleText": "我的" }
+    },
+    {
+      "path": "pages/task-detail/index",
+      "style": { "navigationBarTitleText": "任务详情" }
+    },
+    {
+      "path": "pages/submit/index",
+      "style": { "navigationBarTitleText": "提交材料" }
+    },
+    {
+      "path": "pages/submit-success/index",
+      "style": { "navigationBarTitleText": "提交成功" }
+    },
+    {
+      "path": "pages/submission-detail/index",
+      "style": { "navigationBarTitleText": "提交详情" }
+    },
+    {
+      "path": "pages/review-result/index",
+      "style": { "navigationBarTitleText": "审核结果" }
+    },
+    {
+      "path": "pages/resubmit/index",
+      "style": { "navigationBarTitleText": "重新提交" }
+    },
+    {
+      "path": "pages/submissions/index",
+      "style": { "navigationBarTitleText": "我的提交" }
+    }
+  ],
+  "globalStyle": {
+    "navigationStyle": "custom",
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "教研室事务助手",
+    "backgroundColor": "#F5F7FA"
+  }
+}

@@ -1,0 +1,40 @@
+// =====================================================================
+// 全局混入(经 src/uni.scss 自动注入,所有组件可直接使用)
+// =====================================================================
+
+// 发丝线(1rpx ≈ 0.5px,Retina 下呈现细分割线)
+@mixin hairline-top { border-top: 1rpx solid $border; }
+@mixin hairline-bottom { border-bottom: 1rpx solid $border; }
+
+// 文本省略
+@mixin ellipsis($lines: 1) {
+  @if $lines == 1 {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  } @else {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: $lines;
+  }
+}
+
+// 底部安全区(iPhone Home Indicator / Android 手势条)
+@mixin safe-bottom($extra: 0rpx) {
+  padding-bottom: calc(#{$extra} + constant(safe-area-inset-bottom));
+  padding-bottom: calc(#{$extra} + env(safe-area-inset-bottom));
+}
+
+// flex 工具
+@mixin flex-row($justify: flex-start, $align: center) {
+  display: flex;
+  flex-direction: row;
+  justify-content: $justify;
+  align-items: $align;
+}
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -1,0 +1,25 @@
+{
+  "name": "教研室事务助手",
+  "appid": "",
+  "description": "高校教研室事务协同小程序(教师端)",
+  "versionName": "0.1.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "vueVersion": "3",
+  "mp-weixin": {
+    "appid": "",
+    "setting": {
+      "urlCheck": false,
+      "es6": true,
+      "postcss": true,
+      "minified": true
+    },
+    "usingComponents": true
+  },
+  "h5": {
+    "title": "教研室事务助手",
+    "router": {
+      "mode": "hash"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "description": "教研室事务助手（uni-app 微信小程序；npm run build:mp-weixin 后打开本目录即可）",
+  "appid": "",
+  "projectname": "jys-miniprogram",
+  "miniprogramRoot": "dist/build/mp-weixin/",
+  "compileType": "miniprogram",
+  "libVersion": "3.5.5",
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": false,
+    "ignoreDevUnusedFiles": false,
+    "ignoreUploadUnusedFiles": false
+  },
+  "condition": {
+    "miniprogram": {
+      "list": []
+    }
+  }
+}
