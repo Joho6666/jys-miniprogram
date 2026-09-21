@@ -2,18 +2,11 @@
   <view class="page">
     <app-nav-bar title="我的提交" />
 
-    <scroll-view class="chips" scroll-x :show-scrollbar="false">
-      <view class="chips__inner">
-        <filter-chip
-          v-for="item in SUBMISSION_FILTERS"
-          :key="item.key"
-          :label="item.label"
-          :count="countOf(item.key)"
-          :active="submissionStore.filter === item.key"
-          @tap="submissionStore.setFilter(item.key)"
-        />
-      </view>
-    </scroll-view>
+    <filter-tabs
+      :items="tabs"
+      :model-value="submissionStore.filter"
+      @change="onFilterChange"
+    />
 
     <view class="list">
       <loading-state v-if="submissionStore.loading" />
@@ -54,10 +47,22 @@ import { onLoad, onShow } from '@dcloudio/uni-app';
 import { SUBMISSION_FILTERS, useSubmissionStore } from '@/stores/submission';
 import type { SubmissionFilterKey } from '@/stores/submission';
 import { fullDateTime } from '@/services/format';
+import { usePageShare } from '@/services/share';
+
+usePageShare(() => ({ title: '我的提交记录 · 教研室事务助手', path: '/pages/submissions/index' }));
 
 const submissionStore = useSubmissionStore();
 
 const filtered = computed(() => submissionStore.filtered);
+
+/** 标签页（含计数） */
+const tabs = computed(() =>
+  SUBMISSION_FILTERS.map((item) => ({
+    key: item.key,
+    label: item.label,
+    count: countOf(item.key),
+  })),
+);
 
 onLoad((query) => {
   const preset = query && typeof query.filter === 'string' ? (query.filter as SubmissionFilterKey) : undefined;
@@ -71,10 +76,11 @@ onShow(async () => {
 });
 
 function countOf(key: SubmissionFilterKey): number {
-  if (key === 'ALL') return submissionStore.counts.ALL;
-  if (key === 'PENDING_REVIEW') return submissionStore.counts.PENDING_REVIEW;
-  if (key === 'APPROVED') return submissionStore.counts.APPROVED;
-  return submissionStore.counts.REJECTED;
+  return submissionStore.counts[key];
+}
+
+function onFilterChange(key: string): void {
+  submissionStore.setFilter(key as SubmissionFilterKey);
 }
 
 function reload(): void {
@@ -91,18 +97,6 @@ function goDetail(submissionId: string): void {
   min-height: 100vh;
   background: $bg;
   padding-bottom: 60rpx;
-}
-
-.chips {
-  margin-top: 24rpx;
-  white-space: nowrap;
-  width: 100%;
-}
-
-.chips__inner {
-  display: inline-flex;
-  flex-direction: row;
-  padding: 0 32rpx 8rpx;
 }
 
 .list {

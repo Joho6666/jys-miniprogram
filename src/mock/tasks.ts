@@ -1,11 +1,30 @@
 import type { FileFormat, Task, TaskCategory } from '@/types';
 import { at } from './db';
 
+/** 任务种子：不含展示标签，标签由分类统一派生（设计规范：卡片两枚标签） */
+type TaskSeed = Omit<Task, 'tags'>;
+
+/** 第二枚标签（第一枚恒为分类），语义与分类保持一致 */
+const SECOND_TAG: Record<TaskCategory, string> = {
+  项目申报: '教学建设',
+  教学建设: '课程建设',
+  日常事务: '教研活动',
+  材料归档: '教学检查',
+  经费管理: '定期汇报',
+  教材建设: '教材编写',
+  实验室建设: '条件建设',
+  人事事务: '教师发展',
+};
+
+function withTags(seed: TaskSeed): Task {
+  return { ...seed, tags: [seed.category, SECOND_TAG[seed.category]] };
+}
+
 /**
  * 教研室事务任务（教师端可见的教研室共享事务池）
  * 说明：owner 为该事务牵头教师，publisher 为发布人（教学秘书 / 教研室主任）。
  */
-const NAMED_TASKS: Task[] = [
+const NAMED_TASKS: TaskSeed[] = [
   {
     id: 'task-001',
     title: '省级一流课程申报材料提交',
@@ -248,8 +267,8 @@ const HISTORY_KINDS: Array<{ label: string; format: FileFormat; sizeKB: number; 
 
 const HISTORY_OWNERS = ['王老师', '李老师', '陈老师', '刘老师', '赵老师'];
 
-function buildHistoryTasks(): Task[] {
-  const list: Task[] = [];
+function buildHistoryTasks(): TaskSeed[] {
+  const list: TaskSeed[] = [];
   let index = 0;
   for (let i = 0; i < COURSES.length; i += 1) {
     for (let k = 0; k < HISTORY_KINDS.length; k += 1) {
@@ -286,4 +305,4 @@ function buildHistoryTasks(): Task[] {
 }
 
 /** 全部任务（具名 + 历史归档） */
-export const MOCK_TASKS: Task[] = [...NAMED_TASKS, ...buildHistoryTasks()];
+export const MOCK_TASKS: Task[] = [...NAMED_TASKS, ...buildHistoryTasks()].map(withTags);

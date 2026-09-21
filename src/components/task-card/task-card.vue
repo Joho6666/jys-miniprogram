@@ -1,29 +1,35 @@
 <template>
   <view class="task-card" hover-class="task-card--hover" @tap="onTap">
     <view class="task-card__head">
-      <status-tag :status="task.bizStatus" />
-      <text class="task-card__note">{{ task.statusNote }}</text>
+      <status-tag :status="badge.key" :label="badge.label" />
+      <text class="task-card__remain" :class="{ 'task-card__remain--danger': isUrgent }">{{ remain }}</text>
     </view>
 
     <text class="task-card__title">{{ task.title }}</text>
 
-    <view class="task-card__meta">
-      <template v-if="task.rejectSummary">
-        <text class="task-card__meta-label">审核意见</text>
-        <text class="task-card__meta-reject">{{ task.rejectSummary }}</text>
-      </template>
-      <template v-else>
-        <text class="task-card__meta-text">{{ task.category }}</text>
-        <text class="task-card__meta-split">·</text>
-        <text class="task-card__meta-text">负责人 {{ task.ownerName }}</text>
-      </template>
+    <view class="task-card__tags">
+      <text
+        v-for="(tag, index) in task.tags"
+        :key="tag"
+        class="task-card__tag"
+        :class="{ 'task-card__tag--main': index === 0 }"
+      >
+        {{ tag }}
+      </text>
+    </view>
+
+    <view v-if="task.rejectSummary" class="task-card__reject">
+      <text class="task-card__reject-text">审核意见：{{ task.rejectSummary }}</text>
     </view>
 
     <view class="task-card__foot">
-      <text class="task-card__deadline">截止 {{ deadlineText(task.deadline) }}</text>
-      <view class="task-card__action" hover-class="task-card__action--hover" @tap.stop="onAction">
-        <text class="task-card__action-text">{{ action.shortLabel }}</text>
-        <uni-icons type="right" size="12" color="#1677FF" />
+      <view class="task-card__meta">
+        <app-icon name="person" tone="neutral" variant="plain" size="sm" />
+        <text class="task-card__meta-text">{{ task.ownerName }}</text>
+      </view>
+      <view class="task-card__meta">
+        <app-icon name="calendar" tone="neutral" variant="plain" size="sm" />
+        <text class="task-card__meta-text">{{ shortDate(task.deadline) }}</text>
       </view>
     </view>
   </view>
@@ -32,29 +38,24 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { TaskView } from '@/types';
-import { deadlineText } from '@/services/format';
-import { primaryActionOf } from '@/services/domain';
+import { shortDate } from '@/services/format';
+import { remainShortText, taskBadgeOf, urgencyOf } from '@/services/domain';
 
-/** 任务卡（列表 / 首页共用）：状态 + 剩余时间 / 名称 / 类型·负责人 / 截止 / 主操作 */
+/** 任务卡（首页 / 我的待办共用）：紧急度徽标 + 距截止 + 标题 + 两枚标签 + 负责人·截止日期 */
 interface Props {
   task: TaskView;
 }
 
 const props = defineProps<Props>();
 
-const emit = defineEmits<{
-  (e: 'tap', task: TaskView): void;
-  (e: 'action', task: TaskView): void;
-}>();
+const emit = defineEmits<{ (e: 'tap', task: TaskView): void }>();
 
-const action = computed(() => primaryActionOf(props.task.bizStatus));
+const badge = computed(() => taskBadgeOf(props.task));
+const remain = computed(() => remainShortText(props.task.deadline));
+const isUrgent = computed(() => urgencyOf(props.task.deadline) === 'URGENT');
 
 function onTap(): void {
   emit('tap', props.task);
-}
-
-function onAction(): void {
-  emit('action', props.task);
 }
 </script>
 
@@ -74,46 +75,52 @@ function onAction(): void {
   @include flex-row(space-between);
 }
 
-.task-card__note {
+.task-card__remain {
   font-size: $font-tag;
   color: $text-3;
+}
+
+.task-card__remain--danger {
+  color: $danger;
 }
 
 .task-card__title {
   display: block;
-  margin-top: 12rpx;
+  margin-top: 16rpx;
   font-size: $font-md;
-  font-weight: 500;
+  font-weight: 600;
   color: $text-1;
+  line-height: 1.45;
   @include ellipsis(1);
 }
 
-.task-card__meta {
+.task-card__tags {
   @include flex-row();
-  margin-top: 8rpx;
-  min-width: 0;
+  margin-top: 12rpx;
 }
 
-.task-card__meta-text {
-  font-size: $font-tag;
+.task-card__tag {
+  height: 40rpx;
+  padding: 0 12rpx;
+  margin-right: 12rpx;
+  border-radius: $radius-tag;
+  background: $bg;
   color: $text-2;
+  font-size: $font-xs;
+  @include flex-center;
 }
 
-.task-card__meta-split {
-  font-size: $font-tag;
-  color: $text-3;
-  margin: 0 10rpx;
+/* 第一枚为分类标签：品牌浅底，建立标签层级 */
+.task-card__tag--main {
+  background: $primary-light;
+  color: $primary;
 }
 
-.task-card__meta-label {
-  font-size: $font-tag;
-  color: $danger;
-  flex-shrink: 0;
-  margin-right: 8rpx;
+.task-card__reject {
+  margin-top: 12rpx;
 }
 
-.task-card__meta-reject {
-  flex: 1;
+.task-card__reject-text {
   font-size: $font-tag;
   color: $danger;
   @include ellipsis(1);
@@ -121,32 +128,18 @@ function onAction(): void {
 
 .task-card__foot {
   @include flex-row(space-between);
-  margin-top: 12rpx;
-  padding-top: 12rpx;
+  margin-top: 16rpx;
+  padding-top: 16rpx;
   border-top: 1rpx solid $border;
 }
 
-.task-card__deadline {
+.task-card__meta {
+  @include flex-row();
+}
+
+.task-card__meta-text {
+  margin-left: 6rpx;
   font-size: $font-tag;
   color: $text-3;
-}
-
-/* 紧凑按钮：32px 高，符合设计规范的次要操作尺寸 */
-.task-card__action {
-  @include flex-row();
-  height: 64rpx;
-  padding: 0 22rpx;
-  border: 1rpx solid $primary;
-  border-radius: 32rpx;
-}
-
-.task-card__action--hover {
-  background: $primary-light;
-}
-
-.task-card__action-text {
-  font-size: $font-tag;
-  color: $primary;
-  margin-right: 4rpx;
 }
 </style>

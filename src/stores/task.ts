@@ -2,24 +2,30 @@ import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 import type { TaskFilterKey, TaskView } from '@/types';
 import { fetchTaskDetail, fetchTasks } from '@/api/task';
+import { urgencyOf } from '@/services/domain';
 
-/** 任务列表筛选键（与界面 chip 一一对应） */
+/** 「我的待办」标签页（设计规范：全部 / 紧急 / 即将截止 / 待审核 / 已驳回 / 已完成） */
 export const TASK_FILTERS: Array<{ key: TaskFilterKey; label: string }> = [
   { key: 'ALL', label: '全部' },
+  { key: 'URGENT', label: '紧急' },
   { key: 'DUE_SOON', label: '即将截止' },
-  { key: 'IN_PROGRESS', label: '进行中' },
   { key: 'PENDING_REVIEW', label: '待审核' },
   { key: 'REJECTED', label: '已驳回' },
   { key: 'COMPLETED', label: '已完成' },
 ];
 
-const FILTER_MAP: Record<TaskFilterKey, string[]> = {
-  ALL: [],
-  DUE_SOON: ['DUE_SOON', 'OVERDUE'],
-  IN_PROGRESS: ['IN_PROGRESS', 'NOT_STARTED'],
-  PENDING_REVIEW: ['PENDING_REVIEW'],
-  REJECTED: ['REJECTED'],
-  COMPLETED: ['COMPLETED', 'APPROVED'],
+/** 需要教师本人推进的状态（待审核已提交、已完成均已终态，不参与紧急度筛选） */
+const ACTIONABLE: string[] = ['NOT_STARTED', 'IN_PROGRESS', 'DUE_SOON', 'OVERDUE', 'REJECTED'];
+/** 终态（列表沉底） */
+const CLOSED: string[] = ['COMPLETED', 'APPROVED'];
+
+const FILTER_PREDICATES: Record<TaskFilterKey, (task: TaskView) => boolean> = {
+  ALL: () => true,
+  URGENT: (t) => ACTIONABLE.includes(t.bizStatus) && urgencyOf(t.deadline) === 'URGENT',
+  DUE_SOON: (t) => ACTIONABLE.includes(t.bizStatus) && urgencyOf(t.deadline) === 'SOON',
+  PENDING_REVIEW: (t) => t.bizStatus === 'PENDING_REVIEW',
+  REJECTED: (t) => t.bizStatus === 'REJECTED',
+  COMPLETED: (t) => CLOSED.includes(t.bizStatus),
 };
 
 export const useTaskStore = defineStore('task', () => {
@@ -34,15 +40,14 @@ export const useTaskStore = defineStore('task', () => {
 
   /** 列表（筛选 + 搜索）：待办优先、按紧急度排序；已完成沉底、按最近截止排序 */
   const filtered = computed(() => {
-    const closed = ['COMPLETED', 'APPROVED'];
-    const statuses = FILTER_MAP[filter.value];
+    const predicate = FILTER_PREDICATES[filter.value];
     const kw = keyword.value.trim();
     return tasks.value
-      .filter((t) => (statuses.length ? statuses.includes(t.bizStatus) : true))
+      .filter((t) => predicate(t))
       .filter((t) => (kw ? t.title.includes(kw) || t.ownerName.includes(kw) || t.category.includes(kw) : true))
       .sort((a, b) => {
-        const ca = closed.includes(a.bizStatus) ? 1 : 0;
-        const cb = closed.includes(b.bizStatus) ? 1 : 0;
+        const ca = CLOSED.includes(a.bizStatus) ? 1 : 0;
+        const cb = CLOSED.includes(b.bizStatus) ? 1 : 0;
         if (ca !== cb) return ca - cb;
         if (a.deadline === b.deadline) return 0;
         return ca === 1
@@ -55,14 +60,23 @@ export const useTaskStore = defineStore('task', () => {
       });
   });
 
+  /** 各标签页计数（角标用） */
+  const filterCounts = computed(() => {
+    const counts = {} as Record<TaskFilterKey, number>;
+    TASK_FILTERS.forEach((item) => {
+      counts[item.key] = tasks.value.filter((t) => FILTER_PREDICATES[item.key](t)).length;
+    });
+    return counts;
+  });
+
   /** 首页统计（全部由列表数据计算，不写死） */
   const stats = computed(() => {
-    const active = tasks.value.filter((t) => ['NOT_STARTED', 'IN_PROGRESS', 'DUE_SOON', 'REJECTED', 'OVERDUE'].includes(t.bizStatus));
+    const actionable = tasks.value.filter((t) => ACTIONABLE.includes(t.bizStatus));
     return {
-      todo: active.length,
+      todo: actionable.length,
       dueSoon: tasks.value.filter((t) => t.bizStatus === 'DUE_SOON').length,
       pendingReview: tasks.value.filter((t) => t.bizStatus === 'PENDING_REVIEW').length,
-      completed: tasks.value.filter((t) => t.bizStatus === 'COMPLETED' || t.bizStatus === 'APPROVED').length,
+      completed: tasks.value.filter((t) => CLOSED.includes(t.bizStatus)).length,
       rejected: tasks.value.filter((t) => t.bizStatus === 'REJECTED').length,
       overdue: tasks.value.filter((t) => t.bizStatus === 'OVERDUE').length,
     };
@@ -132,6 +146,7 @@ export const useTaskStore = defineStore('task', () => {
     filter,
     keyword,
     filtered,
+    filterCounts,
     stats,
     urgentTasks,
     rejectedTasks,

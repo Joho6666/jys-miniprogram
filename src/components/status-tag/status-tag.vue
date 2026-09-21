@@ -9,22 +9,22 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { BizStatus } from '@/types';
-import { STATUS_META } from '@/types';
+import type { BadgeKey } from '@/types';
+import { BADGE_META } from '@/types';
 
 /**
- * 全系统唯一状态颜色渲染组件。
+ * 全系统唯一徽标渲染组件：同时支持业务状态（8 态）与任务紧急度（紧急 / 即将截止 / 普通）。
  * 任何页面/组件不得自行定义状态配色，一律通过本组件输出。
  */
 interface Props {
-  status: BizStatus;
-  /** 覆盖文案（默认取状态标准名称） */
+  status: BadgeKey;
+  /** 覆盖文案（默认取标准名称） */
   label?: string;
 }
 
 const props = defineProps<Props>();
 
-const meta = computed(() => STATUS_META[props.status]);
+const meta = computed(() => BADGE_META[props.status]);
 const text = computed(() => (props.label ? props.label : meta.value.label));
 </script>
 

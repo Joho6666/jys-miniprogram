@@ -1,65 +1,44 @@
 <template>
   <view class="page">
-    <app-nav-bar title="我的" :show-back="false" />
-
-    <!-- 个人信息 -->
-    <view class="profile">
-      <view class="profile__avatar">
-        <text class="profile__avatar-text">{{ user?.avatarText || '张' }}</text>
-      </view>
-      <view class="profile__main">
-        <view class="profile__name-line">
-          <text class="profile__name">{{ user?.name || '张老师' }}</text>
-          <text class="profile__title">{{ user?.title || '教师' }}</text>
+    <!-- 品牌区：个人信息 -->
+    <view class="hero">
+      <view class="hero__overlay" />
+      <app-nav-bar title="我的" :show-back="false" transparent theme="light" />
+      <view class="hero__body">
+        <view class="hero__avatar">
+          <text class="hero__avatar-text">{{ user?.avatarText || '张' }}</text>
         </view>
-        <text class="profile__org">{{ user?.college || '能源与建筑环境学院' }} · {{ user?.office || '工程管理教研室' }}</text>
+        <view class="hero__main">
+          <text class="hero__name">{{ user?.name || '张老师' }}</text>
+          <text class="hero__org">{{ user?.title || '教师' }} | {{ user?.office || '工程管理教研室' }}</text>
+        </view>
+      </view>
+      <view class="hero__art">
+        <campus-art variant="hero" tone="light" />
       </view>
     </view>
 
-    <view class="stats">
-      <view class="stats__item" @tap="goTasks('ALL')">
-        <text class="stats__value">{{ taskStore.tasks.length }}</text>
-        <text class="stats__label">本学期任务</text>
-      </view>
-      <view class="stats__split" />
-      <view class="stats__item" @tap="goTasks('COMPLETED')">
-        <text class="stats__value stats__value--success">{{ stats.completed }}</text>
-        <text class="stats__label">已完成</text>
-      </view>
-      <view class="stats__split" />
-      <view class="stats__item" @tap="goTasks('DUE_SOON')">
-        <text class="stats__value" :class="{ 'stats__value--danger': stats.overdue > 0 }">{{ stats.overdue }}</text>
-        <text class="stats__label">已逾期</text>
+    <!-- 功能列表 -->
+    <view class="menu">
+      <view v-for="(item, index) in MENU" :key="item.key">
+        <view v-if="index > 0" class="menu__line" />
+        <group-list-cell :title="item.title" :icon="item.icon" :tone="item.tone" @tap="onMenu(item)" />
       </view>
     </view>
 
-    <view class="group">
-      <text class="group__title">教研与学术事务</text>
-      <view class="group__card">
-        <group-list-cell icon-text="提" title="我的提交记录" @tap="goSubmissions('ALL')" />
-        <view class="group__line" />
-        <group-list-cell icon-text="完" title="我的已完成任务" @tap="goTasks('COMPLETED')" />
-        <view class="group__line" />
-        <group-list-cell icon-text="审" title="审核结果" @tap="goSubmissions('APPROVED')" />
-      </view>
-    </view>
-
-    <view class="group">
-      <text class="group__title">通用服务</text>
-      <view class="group__card">
-        <group-list-cell icon-text="文" title="文件记录" @tap="notReady('文件记录')" />
-        <view class="group__line" />
-        <group-list-cell icon-text="消" title="消息设置" @tap="notReady('消息设置')" />
-        <view class="group__line" />
-        <group-list-cell icon-text="帮" title="帮助与反馈" @tap="notReady('帮助与反馈')" />
-        <view class="group__line" />
-        <group-list-cell icon-text="关" title="关于系统" :value="APP_VERSION" @tap="onAbout" />
-      </view>
-    </view>
-
+    <!-- 退出登录 -->
     <view class="logout">
       <view class="logout__btn" hover-class="logout__btn--hover" @tap="logoutVisible = true">
         <text class="logout__text">退出登录</text>
+      </view>
+    </view>
+
+    <!-- 品牌页脚 -->
+    <view class="brand">
+      <text class="brand__title">立德树人 · 数据兴校</text>
+      <text class="brand__sub">—— XX 大学 ——</text>
+      <view class="brand__art">
+        <campus-art variant="footer" tone="soft" />
       </view>
     </view>
 
@@ -80,41 +59,65 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
-import { useTaskStore } from '@/stores/task';
+import type { IconTone } from '@/types';
 import { useUserStore } from '@/stores/user';
+import { usePageShare } from '@/services/share';
+
+usePageShare(() => ({ title: '教研室事务助手 · 教师端', path: '/pages/profile/index' }));
 
 const APP_VERSION = 'v0.1.0';
 
-const taskStore = useTaskStore();
+interface MenuItem {
+  key: string;
+  title: string;
+  icon: string;
+  tone: IconTone;
+  /** 页面路径（reLaunch / navigateTo） */
+  url?: string;
+  /** 是否为 tab 页 */
+  tab?: boolean;
+  /** 尚未实现的入口 */
+  todo?: boolean;
+}
+
+const MENU: MenuItem[] = [
+  { key: 'submissions', title: '我的提交记录', icon: 'list', tone: 'primary', url: '/pages/submissions/index' },
+  { key: 'completed', title: '我的已完成任务', icon: 'checkmarkempty', tone: 'success', url: '/pages/tasks/index?filter=COMPLETED', tab: true },
+  { key: 'favorite', title: '我的收藏', icon: 'star', tone: 'warning', todo: true },
+  { key: 'help', title: '帮助中心', icon: 'help', tone: 'primary', todo: true },
+  { key: 'feedback', title: '意见反馈', icon: 'compose', tone: 'primary', todo: true },
+  { key: 'about', title: '关于我们', icon: 'info', tone: 'primary' },
+  { key: 'settings', title: '设置', icon: 'gear', tone: 'neutral', todo: true },
+];
+
 const userStore = useUserStore();
 
 const logoutVisible = ref(false);
-
 const user = computed(() => userStore.current);
-const stats = computed(() => taskStore.stats);
 
 onShow(async () => {
-  await Promise.all([userStore.load(), taskStore.loadTasks()]);
+  await userStore.load();
 });
 
-function goTasks(filter: string): void {
-  uni.reLaunch({ url: `/pages/tasks/index?filter=${filter}` });
-}
-
-function goSubmissions(filter: string): void {
-  uni.navigateTo({ url: `/pages/submissions/index?filter=${filter}` });
-}
-
-function notReady(name: string): void {
-  uni.showToast({ title: `${name}功能开发中`, icon: 'none' });
-}
-
-function onAbout(): void {
-  uni.showModal({
-    title: '教研室事务助手',
-    content: `版本 ${APP_VERSION}\n面向高校教研室事务协同的移动端应用。`,
-    showCancel: false,
-  });
+function onMenu(item: MenuItem): void {
+  if (item.key === 'about') {
+    uni.showModal({
+      title: '教研室事务助手',
+      content: `版本 ${APP_VERSION}\n面向高校教研室事务协同的移动端应用。`,
+      showCancel: false,
+    });
+    return;
+  }
+  if (item.todo) {
+    uni.showToast({ title: `${item.title}功能开发中`, icon: 'none' });
+    return;
+  }
+  if (!item.url) return;
+  if (item.tab) {
+    uni.reLaunch({ url: item.url });
+    return;
+  }
+  uni.navigateTo({ url: item.url });
 }
 
 function doLogout(): void {
@@ -131,123 +134,86 @@ function doLogout(): void {
   @include safe-bottom(200rpx);
 }
 
-/* ---------- 个人信息 ---------- */
-.profile {
-  @include flex-row();
-  padding: 40rpx 32rpx;
-  background: $surface;
+/* ---------- 品牌区 ---------- */
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: $primary;
+  padding-bottom: 84rpx;
 }
 
-.profile__avatar {
+.hero__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: $hero-overlay;
+}
+
+.hero__body {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 8rpx 32rpx 0;
+}
+
+.hero__avatar {
   width: 120rpx;
   height: 120rpx;
   border-radius: 50%;
-  background: $primary;
+  background: $surface;
   @include flex-center;
   flex-shrink: 0;
 }
 
-.profile__avatar-text {
+.hero__avatar-text {
   font-size: 44rpx;
   font-weight: 600;
-  color: $white;
+  color: $primary;
 }
 
-.profile__main {
+.hero__main {
   flex: 1;
   margin-left: 28rpx;
   min-width: 0;
 }
 
-.profile__name-line {
-  @include flex-row();
-}
-
-.profile__name {
+.hero__name {
+  display: block;
   font-size: $font-title;
   font-weight: 600;
-  color: $text-1;
+  color: $white;
 }
 
-.profile__title {
-  margin-left: 16rpx;
-  height: 40rpx;
-  padding: 0 14rpx;
-  border-radius: 8rpx;
-  background: $primary-light;
-  color: $primary;
-  font-size: $font-xs;
-  @include flex-center;
-}
-
-.profile__org {
+.hero__org {
   display: block;
-  margin-top: 14rpx;
-  font-size: $font-tag;
-  color: $text-2;
+  margin-top: 12rpx;
+  font-size: $font-label;
+  color: rgba(255, 255, 255, 0.86);
   @include ellipsis(1);
 }
 
-/* ---------- 统计 ---------- */
-.stats {
-  display: flex;
-  flex-direction: row;
-  background: $surface;
-  margin-top: 1rpx;
-  padding: 24rpx 0 32rpx;
+.hero__art {
+  position: absolute;
+  right: -16rpx;
+  bottom: -8rpx;
+  z-index: 1;
 }
 
-.stats__item {
-  flex: 1;
-  @include flex-center;
-  flex-direction: column;
-}
-
-.stats__split {
-  width: 1rpx;
-  background: $border;
-  margin: 8rpx 0;
-}
-
-.stats__value {
-  font-size: 40rpx;
-  font-weight: 600;
-  color: $text-1;
-}
-
-.stats__value--success {
-  color: $success;
-}
-
-.stats__value--danger {
-  color: $danger;
-}
-
-.stats__label {
-  margin-top: 8rpx;
-  font-size: $font-tag;
-  color: $text-3;
-}
-
-/* ---------- 分组 ---------- */
-.group {
-  margin: 24rpx 32rpx 0;
-}
-
-.group__title {
-  display: block;
-  padding: 0 4rpx 16rpx;
-  font-size: $font-tag;
-  color: $text-3;
-}
-
-.group__card {
+/* ---------- 功能列表 ---------- */
+.menu {
+  position: relative;
+  z-index: 3;
+  margin: -40rpx 32rpx 0;
   background: $surface;
   border-radius: $radius-card;
   overflow: hidden;
 }
 
-.group__line {
+.menu__line {
   height: 1rpx;
   background: $border;
   margin-left: 28rpx;
@@ -255,7 +221,7 @@ function doLogout(): void {
 
 /* ---------- 退出 ---------- */
 .logout {
-  padding: 48rpx 32rpx 0;
+  padding: 32rpx 32rpx 0;
 }
 
 .logout__btn {
@@ -272,5 +238,39 @@ function doLogout(): void {
 .logout__text {
   font-size: $font-body;
   color: $danger;
+}
+
+/* ---------- 品牌页脚 ---------- */
+.brand {
+  position: relative;
+  overflow: hidden;
+  margin: 32rpx 32rpx 0;
+  padding: 40rpx 32rpx 0;
+  background: $surface;
+  border-radius: $radius-card;
+  @include flex-center;
+  flex-direction: column;
+}
+
+.brand__title {
+  position: relative;
+  z-index: 2;
+  font-size: $font-md;
+  font-weight: 600;
+  color: $text-1;
+  letter-spacing: 4rpx;
+}
+
+.brand__sub {
+  position: relative;
+  z-index: 2;
+  margin-top: 12rpx;
+  font-size: $font-tag;
+  color: $text-3;
+}
+
+.brand__art {
+  margin-top: 16rpx;
+  opacity: 0.9;
 }
 </style>

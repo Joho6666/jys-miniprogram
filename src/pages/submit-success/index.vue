@@ -47,6 +47,15 @@ import { computed, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useSubmissionStore } from '@/stores/submission';
 import { fullDateTime } from '@/services/format';
+import { usePageShare } from '@/services/share';
+
+usePageShare(() => {
+  const s = submission.value;
+  return {
+    title: s ? `${s.taskTitle}材料已提交，待审核` : '教研室事务助手 · 教师端',
+    path: s ? `/pages/submission-detail/index?submissionId=${s.id}` : '/pages/home/index',
+  };
+});
 
 const submissionStore = useSubmissionStore();
 

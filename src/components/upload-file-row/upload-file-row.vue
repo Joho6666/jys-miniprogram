@@ -7,9 +7,18 @@
 
       <view class="upload-row__info">
         <text class="upload-row__name">{{ item.name }}</text>
-        <view class="upload-row__status">
-          <text class="upload-row__status-text" :class="statusClass">{{ statusText }}</text>
+        <view class="upload-row__sub">
           <text class="upload-row__size">{{ sizeText(item.sizeKB) }}</text>
+          <view class="upload-row__state">
+            <app-icon
+              v-if="item.state === 'SUCCESS'"
+              name="checkmarkempty"
+              tone="success"
+              variant="plain"
+              size="sm"
+            />
+            <text class="upload-row__state-text" :class="statusClass">{{ statusText }}</text>
+          </view>
         </view>
 
         <view v-if="item.state === 'UPLOADING'" class="upload-row__progress">
@@ -19,25 +28,14 @@
     </view>
 
     <view class="upload-row__actions">
-      <view v-if="item.state === 'FAILED'" class="upload-row__btn" hover-class="upload-row__btn--hover" @tap="onRetry">
-        <text class="upload-row__btn-text upload-row__btn-text--primary">重新上传</text>
-      </view>
-      <template v-else-if="item.state === 'SUCCESS'">
-        <view class="upload-row__btn" hover-class="upload-row__btn--hover" @tap="onPreview">
-          <text class="upload-row__btn-text upload-row__btn-text--primary">预览</text>
-        </view>
-        <view class="upload-row__btn" hover-class="upload-row__btn--hover" @tap="onReplace">
-          <text class="upload-row__btn-text">替换</text>
-        </view>
-        <view class="upload-row__btn" hover-class="upload-row__btn--hover" @tap="onRemove">
-          <text class="upload-row__btn-text upload-row__btn-text--danger">删除</text>
-        </view>
-      </template>
-      <view v-else-if="item.state === 'UPLOADING'" class="upload-row__btn" hover-class="upload-row__btn--hover" @tap="onRemove">
-        <text class="upload-row__btn-text">取消</text>
-      </view>
-      <view v-else class="upload-row__btn" hover-class="upload-row__btn--hover" @tap="onRemove">
-        <text class="upload-row__btn-text upload-row__btn-text--danger">删除</text>
+      <text v-if="item.state === 'FAILED'" class="upload-row__link" hover-class="upload-row__link--hover" @tap="onRetry">
+        重新上传
+      </text>
+      <text v-else-if="item.state === 'SUCCESS'" class="upload-row__link" hover-class="upload-row__link--hover" @tap="onReplace">
+        替换
+      </text>
+      <view class="upload-row__close" hover-class="upload-row__close--hover" @tap="onRemove">
+        <app-icon name="closeempty" tone="neutral" variant="plain" size="sm" />
       </view>
     </view>
   </view>
@@ -49,7 +47,7 @@ import type { UploadItem } from '@/types';
 import { FORMAT_META } from '@/types';
 import { sizeText } from '@/services/format';
 
-/** 上传文件行：等待 / 上传中(进度) / 成功(预览·替换·删除) / 失败(重新上传) */
+/** 上传文件行：等待 / 上传中(进度) / 成功(✓ 可预览·替换) / 失败(重新上传)，右侧 × 移除 */
 interface Props {
   item: UploadItem;
 }
@@ -81,9 +79,9 @@ const statusText = computed(() => {
 });
 
 const statusClass = computed(() => ({
-  'upload-row__status-text--success': props.item.state === 'SUCCESS',
-  'upload-row__status-text--danger': props.item.state === 'FAILED',
-  'upload-row__status-text--primary': props.item.state === 'UPLOADING',
+  'upload-row__state-text--success': props.item.state === 'SUCCESS',
+  'upload-row__state-text--danger': props.item.state === 'FAILED',
+  'upload-row__state-text--primary': props.item.state === 'UPLOADING',
 }));
 
 function onRemove(): void {
@@ -104,6 +102,9 @@ function onReplace(): void {
 
 <style lang="scss" scoped>
 .upload-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   padding: 24rpx 0;
   border-bottom: 1rpx solid $border;
 }
@@ -113,7 +114,11 @@ function onReplace(): void {
 }
 
 .upload-row__main {
-  @include flex-row();
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-width: 0;
 }
 
 .upload-row__tile {
@@ -142,34 +147,40 @@ function onReplace(): void {
   @include ellipsis(1);
 }
 
-.upload-row__status {
+.upload-row__sub {
   @include flex-row();
   margin-top: 8rpx;
-}
-
-.upload-row__status-text {
-  font-size: $font-tag;
-  color: $text-3;
-  @include ellipsis(1);
-}
-
-.upload-row__status-text--success {
-  color: $success;
-}
-
-.upload-row__status-text--danger {
-  color: $danger;
-}
-
-.upload-row__status-text--primary {
-  color: $primary;
 }
 
 .upload-row__size {
   font-size: $font-tag;
   color: $text-3;
-  margin-left: 12rpx;
   flex-shrink: 0;
+}
+
+.upload-row__state {
+  @include flex-row();
+  margin-left: 16rpx;
+  min-width: 0;
+}
+
+.upload-row__state-text {
+  margin-left: 4rpx;
+  font-size: $font-tag;
+  color: $text-3;
+  @include ellipsis(1);
+}
+
+.upload-row__state-text--success {
+  color: $success;
+}
+
+.upload-row__state-text--danger {
+  color: $danger;
+}
+
+.upload-row__state-text--primary {
+  color: $primary;
 }
 
 .upload-row__progress {
@@ -189,32 +200,28 @@ function onReplace(): void {
 
 .upload-row__actions {
   @include flex-row(flex-end);
-  margin-top: 16rpx;
+  flex-shrink: 0;
+  margin-left: 16rpx;
 }
 
-.upload-row__btn {
-  height: 56rpx;
-  padding: 0 20rpx;
-  margin-left: 12rpx;
-  border-radius: 28rpx;
-  border: 1rpx solid $border;
-  @include flex-center;
-}
-
-.upload-row__btn--hover {
-  background: $bg;
-}
-
-.upload-row__btn-text {
-  font-size: $font-tag;
-  color: $text-2;
-}
-
-.upload-row__btn-text--primary {
+.upload-row__link {
+  font-size: $font-label;
   color: $primary;
+  margin-right: 20rpx;
 }
 
-.upload-row__btn-text--danger {
-  color: $danger;
+.upload-row__link--hover {
+  opacity: 0.6;
+}
+
+.upload-row__close {
+  width: 48rpx;
+  height: 48rpx;
+  @include flex-center;
+  border-radius: 50%;
+}
+
+.upload-row__close--hover {
+  background: $pressed;
 }
 </style>

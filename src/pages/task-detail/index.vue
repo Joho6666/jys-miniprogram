@@ -6,15 +6,20 @@
     <error-state v-else-if="!task" desc="任务不存在或已下架。" @retry="reload" />
 
     <template v-else>
+      <!-- 标题区 -->
       <view class="head">
         <view class="head__top">
-          <status-tag :status="task.bizStatus" />
-          <text class="head__note">{{ task.statusNote }}</text>
+          <app-icon name="paperclip" tone="primary" variant="soft" size="lg" radius="circle" />
+          <view class="head__main">
+            <text class="head__title">{{ task.title }}</text>
+            <view class="head__badge">
+              <status-tag :status="badge.key" :label="badge.label" />
+              <text class="head__remain">{{ remain }}</text>
+            </view>
+          </view>
         </view>
-        <text class="head__title">{{ task.title }}</text>
         <view class="head__tags">
-          <text class="head__tag">{{ task.category }}</text>
-          <text class="head__tag head__tag--plain">{{ task.publisherName }} 发布</text>
+          <text v-for="tag in task.tags" :key="tag" class="head__tag">{{ tag }}</text>
         </view>
       </view>
 
@@ -22,20 +27,48 @@
         <text class="remind__text" :class="{ 'remind__text--danger': task.bizStatus === 'OVERDUE' }">{{ remindText }}</text>
       </view>
 
-      <view v-if="task.bizStatus === 'REJECTED' && task.rejectSummary" class="reject">
-        <text class="reject__label">审核意见</text>
-        <text class="reject__text">{{ task.rejectSummary }}</text>
-      </view>
-
+      <!-- 基本信息 -->
       <view class="block">
-        <view v-for="row in infoRows" :key="row.label" class="row">
-          <text class="row__label">{{ row.label }}</text>
-          <text class="row__value">{{ row.value }}</text>
+        <view class="row">
+          <app-icon name="paperplane" tone="neutral" variant="plain" size="sm" />
+          <text class="row__label">发布时间</text>
+          <text class="row__value">{{ fullDateTime(task.publishedAt) }}</text>
+        </view>
+        <view class="row">
+          <app-icon :name="deadlineIcon" :tone="deadlineTone" variant="plain" size="sm" />
+          <text class="row__label">截止时间</text>
+          <text class="row__value" :class="{ 'row__value--danger': task.bizStatus === 'OVERDUE' }">
+            {{ fullDateTime(task.deadline) }}
+          </text>
+        </view>
+        <view class="row">
+          <app-icon name="person" tone="neutral" variant="plain" size="sm" />
+          <text class="row__label">负责人</text>
+          <text class="row__value">{{ task.ownerName }}</text>
+          <view class="row__op" hover-class="row__op--hover" @tap="onCall(task.ownerName)">
+            <app-icon name="phone" tone="primary" variant="plain" size="sm" />
+          </view>
+        </view>
+        <view class="row">
+          <app-icon name="flag" tone="neutral" variant="plain" size="sm" />
+          <text class="row__label">任务状态</text>
+          <view class="row__value row__value--badge">
+            <status-tag :status="task.bizStatus" />
+          </view>
+        </view>
+        <view v-if="task.guide" class="row">
+          <app-icon name="info" tone="neutral" variant="plain" size="sm" />
+          <text class="row__label">依据文号</text>
+          <text class="row__value">{{ task.guide }}</text>
         </view>
       </view>
 
+      <!-- 任务说明 -->
       <view class="block">
-        <text class="block__title">任务说明</text>
+        <view class="block__head">
+          <view class="block__bar" />
+          <text class="block__title">任务说明</text>
+        </view>
         <text class="block__text" :class="{ 'block__text--clamp': !expanded }">{{ task.description }}</text>
         <view class="block__toggle" hover-class="block__toggle--hover" @tap="expanded = !expanded">
           <text class="block__toggle-text">{{ expanded ? '收起' : '展开全部' }}</text>
@@ -43,8 +76,12 @@
         </view>
       </view>
 
+      <!-- 附件下载 -->
       <view v-if="task.attachments.length" class="block">
-        <text class="block__title">附件模板（{{ task.attachments.length }}）</text>
+        <view class="block__head">
+          <view class="block__bar" />
+          <text class="block__title">附件下载（{{ task.attachments.length }}）</text>
+        </view>
         <file-row
           v-for="attachment in task.attachments"
           :key="attachment.id"
@@ -54,6 +91,12 @@
           :sub="attachment.note"
           @tap="onDownload(attachment)"
         />
+      </view>
+
+      <!-- 驳回意见 -->
+      <view v-if="task.bizStatus === 'REJECTED' && task.rejectSummary" class="reject">
+        <text class="reject__label">审核意见</text>
+        <text class="reject__text">{{ task.rejectSummary }}</text>
       </view>
     </template>
 
@@ -70,11 +113,24 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import type { TaskAttachment } from '@/types';
+import type { IconTone, TaskAttachment } from '@/types';
 import { useTaskStore } from '@/stores/task';
 import { fullDateTime, deadlineText } from '@/services/format';
-import { primaryActionOf } from '@/services/domain';
+import { primaryActionOf, remainShortText, taskBadgeOf, urgencyOf } from '@/services/domain';
 import { runTaskPrimaryAction } from '@/services/navigation';
+import { usePageShare } from '@/services/share';
+
+/** 分享单条任务：标题用任务名，落地到详情页 */
+usePageShare(() => {
+  const t = task.value;
+  if (!t) {
+    return { title: '教研室事务助手 · 教师端' };
+  }
+  return {
+    title: `${t.title}`,
+    path: `/pages/task-detail/index?id=${t.id}`,
+  };
+});
 
 const taskStore = useTaskStore();
 
@@ -82,13 +138,18 @@ const taskId = ref('');
 const expanded = ref(false);
 
 const task = computed(() => taskStore.detail);
-
 const primary = computed(() => primaryActionOf(task.value?.bizStatus ?? 'NOT_STARTED'));
+const badge = computed(() => taskBadgeOf(task.value as NonNullable<typeof task.value>));
+const remain = computed(() => (task.value ? remainShortText(task.value.deadline) : ''));
 
 const showRemind = computed(() => {
   const status = task.value?.bizStatus;
   return status === 'DUE_SOON' || status === 'OVERDUE' || status === 'IN_PROGRESS';
 });
+
+/** 截止时间图标随紧急度变化 */
+const deadlineTone = computed<IconTone>(() => (urgencyOf(task.value?.deadline ?? '') === 'URGENT' ? 'danger' : 'neutral'));
+const deadlineIcon = 'calendar';
 
 /** 提醒条文案：逾期与在办语义不同，避免与状态标签重复 */
 const remindText = computed(() => {
@@ -98,21 +159,6 @@ const remindText = computed(() => {
     return `已超过截止时间（${deadlineText(t.deadline)}），请尽快补交材料`;
   }
   return `${deadlineText(t.deadline)} 截止 · ${t.statusNote}`;
-});
-
-const infoRows = computed(() => {
-  const t = task.value;
-  if (!t) return [];
-  const rows = [
-    { label: '截止时间', value: fullDateTime(t.deadline) },
-    { label: '负责人', value: t.ownerName },
-    { label: '任务类型', value: t.category },
-    { label: '发布时间', value: `${fullDateTime(t.publishedAt)} · ${t.publisherName}` },
-  ];
-  if (t.guide) {
-    rows.push({ label: '依据文号', value: t.guide });
-  }
-  return rows;
 });
 
 onLoad((query) => {
@@ -138,6 +184,10 @@ function onPrimary(): void {
 function onDownload(attachment: TaskAttachment): void {
   uni.showToast({ title: `已开始下载 ${attachment.name}`, icon: 'none' });
 }
+
+function onCall(name: string): void {
+  uni.showToast({ title: `拨号联系 ${name}（演示）`, icon: 'none' });
+}
 </script>
 
 <style lang="scss" scoped>
@@ -155,21 +205,33 @@ function onDownload(attachment: TaskAttachment): void {
 }
 
 .head__top {
-  @include flex-row(space-between);
+  display: flex;
+  flex-direction: row;
 }
 
-.head__note {
-  font-size: $font-tag;
-  color: $text-3;
+.head__main {
+  flex: 1;
+  margin-left: 20rpx;
+  min-width: 0;
 }
 
 .head__title {
   display: block;
-  margin-top: 20rpx;
   font-size: $font-title;
   font-weight: 600;
   color: $text-1;
   line-height: 1.4;
+}
+
+.head__badge {
+  @include flex-row();
+  margin-top: 16rpx;
+}
+
+.head__remain {
+  margin-left: 12rpx;
+  font-size: $font-tag;
+  color: $text-3;
 }
 
 .head__tags {
@@ -186,11 +248,6 @@ function onDownload(attachment: TaskAttachment): void {
   color: $primary;
   font-size: $font-tag;
   @include flex-center;
-}
-
-.head__tag--plain {
-  background: $bg;
-  color: $text-2;
 }
 
 /* ---------- 提醒 / 驳回 ---------- */
@@ -243,15 +300,16 @@ function onDownload(attachment: TaskAttachment): void {
 }
 
 .row {
-  @include flex-row(space-between);
+  @include flex-row();
   padding: 14rpx 0;
 }
 
 .row__label {
+  margin-left: 12rpx;
   font-size: $font-label;
   color: $text-3;
   flex-shrink: 0;
-  width: 160rpx;
+  width: 140rpx;
 }
 
 .row__value {
@@ -261,12 +319,43 @@ function onDownload(attachment: TaskAttachment): void {
   color: $text-1;
 }
 
+.row__value--danger {
+  color: $danger;
+}
+
+.row__value--badge {
+  @include flex-row(flex-end);
+}
+
+.row__op {
+  width: 48rpx;
+  height: 48rpx;
+  margin-left: 8rpx;
+  @include flex-center;
+  border-radius: 50%;
+}
+
+.row__op--hover {
+  background: $primary-light;
+}
+
+.block__head {
+  @include flex-row();
+  margin-bottom: 16rpx;
+}
+
+.block__bar {
+  width: 6rpx;
+  height: 28rpx;
+  border-radius: 4rpx;
+  background: $primary;
+  margin-right: 12rpx;
+}
+
 .block__title {
-  display: block;
   font-size: $font-md;
   font-weight: 600;
   color: $text-1;
-  margin-bottom: 16rpx;
 }
 
 .block__text {

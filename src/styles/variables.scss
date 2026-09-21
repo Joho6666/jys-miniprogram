@@ -57,3 +57,17 @@ $font-xs: 22rpx;     // 11px 状态标签
 
 // ---- 字体栈(禁止引入任何网络字体) ----
 $font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+
+// ---- 品牌区渐变(同色系极轻渐变:品牌蓝 + 白色透明度,不引入新色相) ----
+$hero-overlay: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.16) 100%);
+$hero-fade: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 100%);
+
+// ---- 图标底托尺寸 ----
+$icon-sm: 48rpx;
+$icon-md: 64rpx;
+$icon-lg: 80rpx;
+
+// ---- 下划线标签页 ----
+$tabs-height: 84rpx;
+$tabs-indicator-width: 44rpx;
+$tabs-indicator-height: 6rpx;

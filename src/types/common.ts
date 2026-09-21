@@ -38,6 +38,52 @@ export const STATUS_META: Record<BizStatus, StatusMeta> = {
 /** 支持上传的文件格式 */
 export type FileFormat = 'PDF' | 'DOC' | 'DOCX' | 'XLS' | 'XLSX' | 'PPT' | 'PPTX' | 'JPG' | 'PNG';
 
+/* ---------------------------------------------------------------------
+   任务紧急度（设计规范：任务卡展示「紧急 / 即将截止 / 普通」）
+   与业务状态互补：待审核 / 已驳回 / 已完成 显示业务状态，其余显示紧急度
+   --------------------------------------------------------------------- */
+export type UrgencyLevel = 'URGENT' | 'SOON' | 'NORMAL';
+
+export const URGENCY_META: Record<UrgencyLevel, StatusMeta> = {
+  URGENT: { label: '紧急', bg: '#FFF1F0', color: '#FF4D4F', border: '#FFA39E' },
+  SOON: { label: '即将截止', bg: '#FFF7E6', color: '#FA8C16', border: '#FFD591' },
+  NORMAL: { label: '普通', bg: '#F2F3F5', color: '#4E5969', border: '#E5E7EB' },
+};
+
+/** 标签类徽标可取的全部键（业务状态 + 紧急度） */
+export type BadgeKey = BizStatus | UrgencyLevel;
+
+/** 徽标配色总表：StatusTag 是唯一消费方 */
+export const BADGE_META: Record<BadgeKey, StatusMeta> = {
+  ...STATUS_META,
+  ...URGENCY_META,
+};
+
+/* ---------------------------------------------------------------------
+   图标色调（设计规范：彩色图标 + 浅色底托 / 实心色块）
+   全项目图标配色唯一来源，app-icon 组件消费
+   --------------------------------------------------------------------- */
+export type IconTone = 'primary' | 'warning' | 'success' | 'danger' | 'review' | 'neutral';
+
+export interface IconToneMeta {
+  /** 浅底（soft 变体的底托色） */
+  bg: string;
+  /** 图标色（soft 变体字形色 / solid 变体的底托色） */
+  color: string;
+}
+
+export const ICON_TONE_META: Record<IconTone, IconToneMeta> = {
+  primary: { bg: '#E8F3FF', color: '#1677FF' },
+  warning: { bg: '#FFF7E6', color: '#FA8C16' },
+  success: { bg: '#F6FFED', color: '#52C41A' },
+  danger: { bg: '#FFF1F0', color: '#FF4D4F' },
+  review: { bg: '#FFFBE6', color: '#FAAD14' },
+  neutral: { bg: '#F2F3F5', color: '#4E5969' },
+};
+
+/** 实心图标块上的字形色 */
+export const ICON_ON_SOLID = '#FFFFFF';
+
 export interface FileFormatMeta {
   /** 文件色块内文字 */
   tile: string;

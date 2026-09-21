@@ -1,5 +1,7 @@
-/** 消息类型（决定图标色块与筛选分类） */
+/** 消息类型（决定筛选分类） */
 export type MessageType = 'TASK' | 'REVIEW' | 'SYSTEM';
+
+import type { IconTone } from './common';
 
 /** 消息业务事件 */
 export type MessageEvent =
@@ -31,7 +33,17 @@ export interface Message {
 export type MessageFilterKey = 'ALL' | MessageType;
 
 export const MESSAGE_TYPE_META: Record<MessageType, { label: string; tile: string; bg: string; color: string }> = {
-  TASK: { label: '任务提醒', tile: '任', bg: '#E8F3FF', color: '#1677FF' },
+  TASK: { label: '任务通知', tile: '任', bg: '#E8F3FF', color: '#1677FF' },
   REVIEW: { label: '审核结果', tile: '审', bg: '#FFFBE6', color: '#FAAD14' },
-  SYSTEM: { label: '系统通知', tile: '系', bg: '#F2F3F5', color: '#4E5969' },
+  SYSTEM: { label: '系统消息', tile: '系', bg: '#F2F3F5', color: '#4E5969' },
+};
+
+/** 消息圆形图标（按业务事件取图标与色调，app-icon 消费） */
+export const MESSAGE_EVENT_META: Record<MessageEvent, { icon: string; tone: IconTone }> = {
+  NEW_TASK: { icon: 'notification', tone: 'primary' },
+  DUE_SOON: { icon: 'notification', tone: 'warning' },
+  SUBMITTED: { icon: 'paperplane', tone: 'primary' },
+  REVIEW_APPROVED: { icon: 'checkmarkempty', tone: 'success' },
+  REVIEW_REJECTED: { icon: 'closeempty', tone: 'danger' },
+  NOTICE: { icon: 'sound', tone: 'primary' },
 };

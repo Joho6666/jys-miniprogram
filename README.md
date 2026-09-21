@@ -30,11 +30,13 @@ npm run type-check        # vue-tsc --noEmit，当前零错误
 
 1. 打开「微信开发者工具」→ 导入项目，目录选择本仓库根目录（`project.config.json` 已将
    `miniprogramRoot` 指向 `dist/build/mp-weixin/`）。
-2. AppID 处选择 **测试号**（或填入你自己的小程序 AppID）；本仓库不内置任何真实 AppID。
-3. 导入后即可编译运行。
+2. AppID 已在 `project.config.json` 中预配置（开发者的测试用 AppID），可直接导入；
+   如需换用自己的小程序，替换该文件中的 `appid` 字段即可。
+3. 导入后 IDE 会自动编译运行；修改 `src/` 后重新执行 `npm run build:mp-weixin`
+   （或使用 `npm run dev:mp-weixin` 监听模式），IDE 会自动刷新。
 
-> 说明：微信开发者工具 CLI（`cli.bat open --project ...`）在新版本中要求有效 AppID，
-> 因此首次打开请在 GUI 中选择「测试号」。
+> 说明：本版本开发者工具的 CLI（`cli open`）会校验 AppID 归属，游客 AppID（touristappid）
+> 只能在 GUI 导入时使用；命令行打开需配置真实 AppID。
 
 ---
 
@@ -75,9 +77,15 @@ jys-miniprogram/
 | 行按压 | `$pressed` | `#F2F3F5` |
 
 - 圆角：卡片/按钮 8px（16rpx）、输入框 6px、标签 4px；主按钮 44px、紧凑按钮 32px。
-- 零阴影、零装饰性渐变；`1rpx` 发丝分割线；设计稿 px × 2 = rpx。
-- 状态标签由 **`StatusTag` 组件唯一渲染**，颜色映射集中在 `types/common.ts` 的 `STATUS_META`。
-- 无外部字体/CDN：图标使用 `@dcloudio/uni-ui` 的 `uni-icons`（本地字体，随包构建）+ 少量 CSS 绘制图形。
+- 品牌区使用「品牌蓝 + 白色透明度」的极轻渐变（`$hero-overlay`），不引入新色相；零阴影。
+- `1rpx` 发丝分割线；设计稿 px × 2 = rpx。
+- **徽标（唯一渲染方 `StatusTag`）**：业务状态 8 态 + **任务紧急度**（紧急 / 即将截止 / 普通），
+  配色集中在 `types/common.ts` 的 `BADGE_META`，页面不得自造。
+- **图标（唯一出口 `AppIcon`）**：三态变体 `soft`（浅底彩字）/ `solid`（实心色块白字）/ `plain`（行内纯字形），
+  色调取自 `ICON_TONE_META`，页面不得直接指定图标颜色。
+- **插画**：`CampusArt` 用纯 CSS 绘制校园剪影（楼体 + 窗格 + 檐口），零图片依赖；
+  后续要换实景照片只需替换该组件内部实现。
+- 无外部字体/CDN：图标使用 `@dcloudio/uni-ui` 的 `uni-icons`（本地字体，随包构建）。
 
 ---
 
@@ -88,9 +96,12 @@ jys-miniprogram/
 `NOT_STARTED` 未开始 · `IN_PROGRESS` 进行中 · `DUE_SOON` 即将截止 · `PENDING_REVIEW` 待审核 ·
 `APPROVED` 已通过 · `COMPLETED` 已完成 · `OVERDUE` 已逾期 · `REJECTED` 已驳回
 
-- **存储态**（任务实体持久化）：`NOT_STARTED / IN_PROGRESS / PENDING_REVIEW / COMPLETED / REJECTED`
-- **派生态**（不落库，由截止时间实时计算）：`DUE_SOON`（≤72 小时截止）、`OVERDUE`（已过期）
-- 派生规则集中在 `services/domain.ts`：`deriveBizStatus / statusNoteOf / buildTaskView / primaryActionOf`
+**存储态**（任务实体持久化）：`NOT_STARTED / IN_PROGRESS / PENDING_REVIEW / COMPLETED / REJECTED`
+**派生态**（不落库，由截止时间实时计算）：`DUE_SOON`（≤72 小时截止）、`OVERDUE`（已过期）
+**紧急度**（任务卡徽标）：`URGENT` 紧急（已逾期或 ≤2 天）、`SOON` 即将截止（3–5 天）、`NORMAL` 普通
+- 派生规则集中在 `services/domain.ts`：`deriveBizStatus / urgencyOf / taskBadgeOf / remainShortText /
+  statusNoteOf / buildTaskView / primaryActionOf`
+- 任务卡徽标：待审核 / 已驳回 / 已完成显示业务状态，其余在办任务显示紧急度
 
 **Mock 数据（`src/mock/`）**
 
@@ -107,13 +118,14 @@ jys-miniprogram/
 
 ## 五、页面与组件
 
-**11 个页面**：首页 · 我的任务 · 任务详情 · 提交材料 · 提交成功 · 提交详情 · 审核结果 ·
-重新提交 · 消息 · 我的 · 我的提交
+**11 个页面**：首页 · 我的待办 · 任务详情 · 提交材料 · 提交成功 · 提交详情 · 审核结果 ·
+重新提交 · 消息提醒 · 我的 · 我的提交
 
-**18 个公共组件**：`AppNavBar`（状态栏 + 微信胶囊避让）· `AppTabBar`（自定义四项导航 + 未读角标）·
-`StatusTag` · `TaskCard` · `FileRow` · `UploadFileRow` · `FilterChip` · `SearchBar` · `SectionHeader` ·
-`MessageRow` · `StatCard` · `GroupListCell` · `ResultState` · `EmptyState` · `ErrorState` ·
-`LoadingState` · `ConfirmModal` · `Timeline`
+**21 个公共组件**：`AppNavBar`（状态栏 + 微信胶囊避让）· `AppTabBar`（自定义四项导航 + 未读角标）·
+`AppIcon`（图标统一出口）· `StatusTag`（业务状态 + 紧急度徽标）· `FilterTabs`（下划线标签页）·
+`CampusArt`（CSS 校园剪影）· `QuoteCard`（教研心语卡）· `TaskCard` · `FileRow` · `UploadFileRow` ·
+`SearchBar` · `SectionHeader` · `MessageRow` · `StatCard` · `GroupListCell` · `ResultState` ·
+`EmptyState` · `ErrorState` · `LoadingState` · `ConfirmModal` · `Timeline`
 
 **已跑通的业务闭环**（H5 端自动化验收已验证）：
 
@@ -169,7 +181,7 @@ VITE_API_BASE=https://api.example.edu.cn
 
 - **未实现**：登录/授权页（按需求从"登录后教师端"开始，身份走 mock）、文件记录 / 消息设置 /
   帮助与反馈（当前为克制的占位提示）、真实文件上传与预览（H5 端为进度模拟）。
-- **小程序端**：产物已通过静态校验（11 页 + 18 组件注册完整）；因环境无有效 AppID，
-  未在微信开发者工具中做交互验收，首次打开请在 GUI 中选择「测试号」。
+- **小程序端**：产物已通过静态校验（11 页 + 组件注册完整），并已在微信开发者工具中打开编译通过；
+  交互验收以 H5 自动化为准，小程序端可在模拟器中直接操作。
 - 后续可扩展：任务列表分页与下拉刷新、消息推送（订阅消息）、审核人角色与工作台、
   多教研室隔离。

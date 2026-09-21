@@ -94,6 +94,9 @@ import { useTaskStore } from '@/stores/task';
 import { useSubmissionStore } from '@/stores/submission';
 import { pickFiles } from '@/services/picker';
 import { deadlineText, fullDateTime, nowText } from '@/services/format';
+import { usePageShare } from '@/services/share';
+
+usePageShare(() => ({ title: '教研室事务助手 · 教师端' }));
 
 const MAX_COUNT = 5;
 

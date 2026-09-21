@@ -21,6 +21,9 @@ unpackage
 # 工具与编辑器生成的临时状态
 .mimosa
 
+# 微信开发者工具的本机私有配置（每位开发者本地生成）
+project.private.config.json
+
 # Editor directories and files
 .idea
 *.suo

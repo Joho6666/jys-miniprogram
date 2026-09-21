@@ -5,9 +5,9 @@ import { fetchMessages, markAllMessagesRead, markMessageRead } from '@/api/messa
 
 export const MESSAGE_FILTERS: Array<{ key: MessageFilterKey; label: string }> = [
   { key: 'ALL', label: '全部' },
-  { key: 'TASK', label: '任务提醒' },
+  { key: 'TASK', label: '任务通知' },
   { key: 'REVIEW', label: '审核结果' },
-  { key: 'SYSTEM', label: '系统通知' },
+  { key: 'SYSTEM', label: '系统消息' },
 ];
 
 export const useMessageStore = defineStore('message', () => {

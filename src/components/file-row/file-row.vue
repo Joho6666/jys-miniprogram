@@ -10,7 +10,7 @@
     </view>
 
     <view class="file-row__op">
-      <uni-icons v-if="downloadable" type="download" size="18" color="#1677FF" />
+      <text v-if="downloadable" class="file-row__action">{{ actionText }}</text>
     </view>
   </view>
 </template>
@@ -21,7 +21,7 @@ import type { FileFormat } from '@/types';
 import { FORMAT_META } from '@/types';
 import { sizeText } from '@/services/format';
 
-/** 附件行（任务模板附件 / 已提交文件） */
+/** 附件行（任务模板附件 / 已提交文件）：色块 + 名称 + 规格 + 右侧「下载」 */
 interface Props {
   name: string;
   format: FileFormat;
@@ -29,11 +29,14 @@ interface Props {
   /** 副标题，默认「格式 · 大小」 */
   sub?: string;
   downloadable?: boolean;
+  /** 右侧操作文案 */
+  actionText?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   sub: '',
   downloadable: true,
+  actionText: '下载',
 });
 
 const emit = defineEmits<{ (e: 'tap'): void }>();
@@ -91,8 +94,13 @@ function onTap(): void {
 }
 
 .file-row__op {
-  width: 56rpx;
+  padding-left: 20rpx;
   @include flex-center;
   flex-shrink: 0;
+}
+
+.file-row__action {
+  font-size: $font-label;
+  color: $primary;
 }
 </style>

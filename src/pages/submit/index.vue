@@ -11,16 +11,30 @@
         <text class="task__deadline">截止 {{ deadlineText(task.deadline) }} · {{ task.statusNote }}</text>
       </view>
 
+      <!-- 上传材料 -->
       <view class="block">
+        <view class="block__head">
+          <view class="block__bar" />
+          <view class="block__head-main">
+            <text class="block__title">上传材料</text>
+            <text class="block__desc">请按要求上传相关材料，支持多种格式文件</text>
+          </view>
+        </view>
+
         <view class="upload" hover-class="upload--hover" @tap="chooseFiles">
           <view class="upload__icon">
             <uni-icons type="plus" size="26" color="#1677FF" />
           </view>
-          <text class="upload__title">点击选择文件</text>
-          <text class="upload__desc">支持 PDF / Word / Excel / PPT / 图片，单个文件不超过 20MB</text>
+          <text class="upload__title">点击上传文件</text>
+          <text class="upload__desc">支持 PDF、Word、Excel、JPG、PNG</text>
+          <text class="upload__desc">单个文件不超过 20MB</text>
         </view>
 
-        <view v-if="items.length" class="list">
+        <template v-if="items.length">
+          <view class="list-head">
+            <text class="list-head__title">已上传文件（{{ items.length }}）</text>
+            <text class="list-head__action" hover-class="list-head__action--hover" @tap="clearVisible = true">清空</text>
+          </view>
           <upload-file-row
             v-for="item in items"
             :key="item.id"
@@ -30,37 +44,42 @@
             @preview="onPreview"
             @replace="onReplace"
           />
-        </view>
+        </template>
       </view>
 
+      <!-- 提交说明 -->
       <view class="block">
-        <view class="note__head">
-          <text class="block__title">提交说明</text>
+        <view class="block__head">
+          <view class="block__bar" />
+          <view class="block__head-main">
+            <text class="block__title">提交说明（选填）</text>
+          </view>
           <text class="note__count">{{ note.length }}/500</text>
         </view>
         <textarea
           v-model="note"
           class="note__input"
           maxlength="500"
-          placeholder="补充说明（选填），如材料清单、版本说明等"
+          placeholder="请输入补充说明…"
           placeholder-class="note__placeholder"
         />
       </view>
 
+      <!-- 温馨提示 -->
       <view class="tips">
-        <text class="tips__title">温馨提示</text>
-        <text class="tips__item">1. 请确认文件内容完整、清晰，命名规范，便于审核与归档；</text>
-        <text class="tips__item">2. 提交后材料进入审核流程，审核期间不可修改；</text>
-        <text class="tips__item">3. 若材料被驳回，可查看审核意见后修改并重新提交。</text>
+        <view class="block__head">
+          <view class="block__bar" />
+          <text class="block__title">温馨提示</text>
+        </view>
+        <text class="tips__item">1. 请确保上传的材料清晰、完整、真实有效；</text>
+        <text class="tips__item">2. 如需替换文件，请先删除后重新上传；</text>
+        <text class="tips__item">3. 提交后如需修改，请联系负责人。</text>
       </view>
     </template>
 
     <view class="footer">
       <view class="footer__inner">
-        <view class="footer__clear" hover-class="footer__clear--hover" @tap="clearVisible = true">
-          <text class="footer__clear-text">清空</text>
-        </view>
-        <view class="g-btn g-btn-primary footer__submit" hover-class="footer__submit--hover" @tap="onSubmit">
+        <view class="g-btn g-btn-primary" hover-class="footer__submit--hover" @tap="onSubmit">
           <text class="footer__submit-text">确认提交</text>
         </view>
       </view>
@@ -95,6 +114,9 @@ import { useTaskStore } from '@/stores/task';
 import { useSubmissionStore } from '@/stores/submission';
 import { pickFiles } from '@/services/picker';
 import { deadlineText, nowText } from '@/services/format';
+import { usePageShare } from '@/services/share';
+
+usePageShare(() => ({ title: '教研室事务助手 · 教师端' }));
 
 const MAX_COUNT = 5;
 
@@ -261,8 +283,8 @@ async function doSubmit(): Promise<void> {
 .page {
   min-height: 100vh;
   background: $bg;
-  padding-bottom: 220rpx;
-  @include safe-bottom(220rpx);
+  padding-bottom: 200rpx;
+  @include safe-bottom(200rpx);
 }
 
 /* ---------- 任务信息 ---------- */
@@ -293,7 +315,7 @@ async function doSubmit(): Promise<void> {
   color: $text-2;
 }
 
-/* ---------- 上传 ---------- */
+/* ---------- 区块 ---------- */
 .block {
   margin: 20rpx 32rpx 0;
   padding: 28rpx 32rpx;
@@ -301,24 +323,58 @@ async function doSubmit(): Promise<void> {
   border-radius: $radius-card;
 }
 
+.block__head {
+  @include flex-row();
+  margin-bottom: 20rpx;
+}
+
+.block__bar {
+  width: 6rpx;
+  height: 28rpx;
+  border-radius: 4rpx;
+  background: $primary;
+  margin-right: 12rpx;
+  flex-shrink: 0;
+}
+
+.block__head-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.block__title {
+  display: block;
+  font-size: $font-md;
+  font-weight: 600;
+  color: $text-1;
+}
+
+.block__desc {
+  display: block;
+  margin-top: 8rpx;
+  font-size: $font-tag;
+  color: $text-3;
+}
+
+/* ---------- 上传区 ---------- */
 .upload {
   @include flex-center;
   flex-direction: column;
-  padding: 48rpx 24rpx;
+  padding: 44rpx 24rpx;
   border: 1rpx dashed $primary;
   border-radius: $radius-card;
-  background: $primary-light;
+  background: $bg;
 }
 
 .upload--hover {
-  opacity: 0.85;
+  background: $primary-light;
 }
 
 .upload__icon {
   width: 88rpx;
   height: 88rpx;
   border-radius: 50%;
-  background: $surface;
+  background: $primary-light;
   @include flex-center;
 }
 
@@ -330,28 +386,35 @@ async function doSubmit(): Promise<void> {
 }
 
 .upload__desc {
-  margin-top: 10rpx;
-  font-size: $font-tag;
-  color: $text-2;
-  text-align: center;
-  line-height: 1.6;
-}
-
-.list {
   margin-top: 8rpx;
+  font-size: $font-tag;
+  color: $text-3;
+  line-height: 1.5;
 }
 
-/* ---------- 提交说明 ---------- */
-.note__head {
+/* ---------- 已上传文件 ---------- */
+.list-head {
   @include flex-row(space-between);
+  margin-top: 32rpx;
+  padding-bottom: 8rpx;
 }
 
-.block__title {
-  font-size: $font-md;
-  font-weight: 600;
+.list-head__title {
+  font-size: $font-label;
+  font-weight: 500;
   color: $text-1;
 }
 
+.list-head__action {
+  font-size: $font-label;
+  color: $primary;
+}
+
+.list-head__action--hover {
+  opacity: 0.6;
+}
+
+/* ---------- 提交说明 ---------- */
 .note__count {
   font-size: $font-tag;
   color: $text-3;
@@ -360,7 +423,6 @@ async function doSubmit(): Promise<void> {
 .note__input {
   width: 100%;
   height: 200rpx;
-  margin-top: 20rpx;
   padding: 20rpx;
   box-sizing: border-box;
   background: $bg;
@@ -383,19 +445,11 @@ async function doSubmit(): Promise<void> {
   border-radius: $radius-card;
 }
 
-.tips__title {
-  display: block;
-  font-size: $font-label;
-  font-weight: 600;
-  color: $text-1;
-  margin-bottom: 12rpx;
-}
-
 .tips__item {
   display: block;
   font-size: $font-tag;
   color: $text-3;
-  line-height: 1.7;
+  line-height: 1.8;
 }
 
 /* ---------- 底部 ---------- */
@@ -411,30 +465,7 @@ async function doSubmit(): Promise<void> {
 }
 
 .footer__inner {
-  @include flex-row();
   padding: 16rpx 32rpx;
-}
-
-.footer__clear {
-  width: 160rpx;
-  height: $btn-height;
-  border: 1rpx solid $border;
-  border-radius: $radius-btn;
-  @include flex-center;
-  margin-right: 20rpx;
-}
-
-.footer__clear--hover {
-  background: $bg;
-}
-
-.footer__clear-text {
-  font-size: 30rpx;
-  color: $text-2;
-}
-
-.footer__submit {
-  flex: 1;
 }
 
 .footer__submit--hover {

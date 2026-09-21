@@ -63,6 +63,18 @@ import { computed, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useSubmissionStore } from '@/stores/submission';
 import { fullDateTime } from '@/services/format';
+import { usePageShare } from '@/services/share';
+
+usePageShare(() => {
+  const s = submission.value;
+  if (!s) {
+    return { title: '教研室事务助手 · 教师端' };
+  }
+  return {
+    title: s.status === 'APPROVED' ? `${s.taskTitle}材料已审核通过` : `${s.taskTitle}材料需要修改`,
+    path: `/pages/review-result/index?submissionId=${s.id}`,
+  };
+});
 
 const submissionStore = useSubmissionStore();
 

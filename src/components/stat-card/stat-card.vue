@@ -1,27 +1,35 @@
 <template>
-  <view class="stat-card" hover-class="stat-card--hover" @tap="onTap">
-    <text class="stat-card__value" :class="valueClass">{{ value }}</text>
-    <text class="stat-card__label">{{ label }}</text>
+  <view class="stat-card" :style="{ background: cardBg }" hover-class="stat-card--hover" @tap="onTap">
+    <app-icon :name="icon" :tone="tone" variant="solid" size="md" />
+    <view class="stat-card__main">
+      <text class="stat-card__value">{{ value }}</text>
+      <text class="stat-card__label">{{ label }}</text>
+    </view>
   </view>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import type { IconTone } from '@/types';
+import { ICON_TONE_META } from '@/types';
 
-/** 统计卡（首页 2×2 数据区） */
+/** 统计卡（首页 2×2 数据区）：实心图标 + 数值 + 标签，卡片底色取图标色调的浅色 */
 interface Props {
   label: string;
   value: number | string;
-  tone?: 'default' | 'primary' | 'warning' | 'danger' | 'success';
+  tone?: IconTone;
+  /** uni-icons 图标名 */
+  icon?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  tone: 'default',
+  tone: 'primary',
+  icon: 'list',
 });
 
 const emit = defineEmits<{ (e: 'tap'): void }>();
 
-const valueClass = computed(() => `stat-card__value--${props.tone}`);
+const cardBg = computed(() => ICON_TONE_META[props.tone].bg);
 
 function onTap(): void {
   emit('tap');
@@ -31,43 +39,34 @@ function onTap(): void {
 <style lang="scss" scoped>
 .stat-card {
   flex: 1;
-  background: $surface;
+  @include flex-row();
+  padding: 24rpx 20rpx;
   border-radius: 12rpx;
-  padding: 24rpx 16rpx;
-  @include flex-center;
-  flex-direction: column;
 }
 
 .stat-card--hover {
-  background: $pressed;
+  opacity: 0.85;
+}
+
+.stat-card__main {
+  flex: 1;
+  margin-left: 16rpx;
+  min-width: 0;
 }
 
 .stat-card__value {
+  display: block;
   font-size: 44rpx;
   font-weight: 600;
-  line-height: 1.2;
+  line-height: 1.1;
   color: $text-1;
 }
 
-.stat-card__value--primary {
-  color: $primary;
-}
-
-.stat-card__value--warning {
-  color: $warning;
-}
-
-.stat-card__value--danger {
-  color: $danger;
-}
-
-.stat-card__value--success {
-  color: $success;
-}
-
 .stat-card__label {
-  margin-top: 8rpx;
+  display: block;
+  margin-top: 6rpx;
   font-size: $font-tag;
   color: $text-2;
+  @include ellipsis(1);
 }
 </style>

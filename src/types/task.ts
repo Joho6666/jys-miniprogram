@@ -30,6 +30,8 @@ export interface Task {
   id: string;
   title: string;
   category: TaskCategory;
+  /** 展示用标签（设计规范：任务卡展示两枚标签，第一枚为分类） */
+  tags: string[];
   /** 任务负责人（当前登录教师视角即本人） */
   ownerId: string;
   ownerName: string;
@@ -62,5 +64,11 @@ export interface TaskView extends Task {
   rejectSummary?: string;
 }
 
-/** 任务列表筛选键 */
-export type TaskFilterKey = 'ALL' | 'DUE_SOON' | 'IN_PROGRESS' | 'PENDING_REVIEW' | 'REJECTED' | 'COMPLETED';
+/** 任务列表筛选键（与「我的待办」标签页一一对应） */
+export type TaskFilterKey =
+  | 'ALL'
+  | 'URGENT'
+  | 'DUE_SOON'
+  | 'PENDING_REVIEW'
+  | 'REJECTED'
+  | 'COMPLETED';

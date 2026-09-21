@@ -1,8 +1,6 @@
 <template>
   <view class="cell" hover-class="cell--hover" @tap="onTap">
-    <view class="cell__icon" :class="iconClass">
-      <text class="cell__icon-text">{{ iconText }}</text>
-    </view>
+    <app-icon :name="icon" :tone="tone" variant="soft" size="md" />
     <text class="cell__title" :class="{ 'cell__title--danger': danger }">{{ title }}</text>
     <text v-if="value" class="cell__value">{{ value }}</text>
     <uni-icons v-if="showArrow" type="right" size="14" color="#86909C" />
@@ -10,27 +8,27 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import type { IconTone } from '@/types';
 
-/** 微信式分组行（「我的」页功能列表） */
+/** 分组行（「我的」页功能列表）：浅底彩色图标 + 标题 + 可选值 + 箭头 */
 interface Props {
   title: string;
-  /** 图标文字（单字，零图片依赖） */
-  iconText: string;
+  /** uni-icons 图标名 */
+  icon: string;
+  tone?: IconTone;
   value?: string;
   showArrow?: boolean;
   danger?: boolean;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
+  tone: 'primary',
   value: '',
   showArrow: true,
   danger: false,
 });
 
 const emit = defineEmits<{ (e: 'tap'): void }>();
-
-const iconClass = computed(() => (props.danger ? 'cell__icon--danger' : 'cell__icon--primary'));
 
 function onTap(): void {
   emit('tap');
@@ -47,35 +45,6 @@ function onTap(): void {
 
 .cell--hover {
   background: $pressed;
-}
-
-.cell__icon {
-  width: 56rpx;
-  height: 56rpx;
-  border-radius: 12rpx;
-  @include flex-center;
-  flex-shrink: 0;
-}
-
-.cell__icon--primary {
-  background: $primary-light;
-}
-
-.cell__icon--danger {
-  background: $danger-bg;
-}
-
-.cell__icon-text {
-  font-size: 26rpx;
-  font-weight: 600;
-}
-
-.cell__icon--primary .cell__icon-text {
-  color: $primary;
-}
-
-.cell__icon--danger .cell__icon-text {
-  color: $danger;
 }
 
 .cell__title {

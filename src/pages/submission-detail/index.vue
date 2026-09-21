@@ -98,6 +98,19 @@ import { computed, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useSubmissionStore } from '@/stores/submission';
 import { fullDateTime } from '@/services/format';
+import { usePageShare } from '@/services/share';
+
+/** 分享提交详情：标题带任务名与版本，落地到当前提交 */
+usePageShare(() => {
+  const s = submission.value;
+  if (!s) {
+    return { title: '教研室事务助手 · 教师端' };
+  }
+  return {
+    title: `${s.taskTitle}（V${s.version}）提交详情`,
+    path: `/pages/submission-detail/index?submissionId=${s.id}`,
+  };
+});
 
 const submissionStore = useSubmissionStore();
 
