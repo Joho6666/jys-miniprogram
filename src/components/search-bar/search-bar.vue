@@ -42,7 +42,7 @@ function readValue(event: unknown): string {
   return '';
 }
 
-function onInput(event: InputEvent | { detail: { value: string } }): void {
+function onInput(event: Event | InputEvent | { detail: { value: string } }): void {
   emit('update:modelValue', readValue(event));
 }
 

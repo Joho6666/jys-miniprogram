@@ -12,6 +12,7 @@ import {
 import type { ReviewPayload, SubmitPayload } from '@/mock/handlers';
 import { buildVersionNodes } from '@/services/domain';
 import { mockCopy, mockFail, mockOk } from '@/services/request';
+import { apiRequest, isMockMode } from '@/services/http';
 
 function submissionBizStatus(submission: Submission): BizStatus {
   if (submission.status === 'APPROVED') return 'APPROVED';
@@ -59,6 +60,7 @@ export function fetchSubmissionDetail(submissionId: string): Promise<SubmissionV
 
 /** 首次提交材料 */
 export function submitMaterials(payload: SubmitPayload): Promise<Submission> {
+  if (!isMockMode()) return apiRequest<any>(`/tasks/${payload.taskId}/submissions`, { method: 'POST', data: { note: payload.note } }).then((s) => ({ id: s.id, taskId: payload.taskId, taskTitle: '', version: s.version, status: s.status, files: [], note: s.note ?? '', submittedAt: s.submittedAt }));
   try {
     return mockCopy(handleSubmit(payload));
   } catch (error) {
@@ -68,6 +70,7 @@ export function submitMaterials(payload: SubmitPayload): Promise<Submission> {
 
 /** 驳回后重新提交（版本自动 +1） */
 export function resubmitMaterials(payload: SubmitPayload): Promise<Submission> {
+  if (!isMockMode()) return submitMaterials(payload);
   try {
     return mockCopy(handleResubmit(payload));
   } catch (error) {

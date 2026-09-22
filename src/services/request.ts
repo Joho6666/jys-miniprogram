@@ -12,7 +12,7 @@ import { deepCopy } from '@/mock/db';
 export const API_BASE: string = (import.meta.env.VITE_API_BASE as string | undefined) ?? '';
 
 /** 是否处于本地 Mock 模式 */
-export const IS_MOCK: boolean = API_BASE === '';
+export const IS_MOCK: boolean = API_BASE === '' || import.meta.env.VITE_USE_MOCK === 'true';
 
 const MOCK_DELAY = 300;
 
