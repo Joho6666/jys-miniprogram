@@ -1,5 +1,5 @@
 <template>
-  <view class="stat-card" :style="{ background: cardBg }" hover-class="stat-card--hover" @tap="onTap">
+  <view class="stat-card" :style="{ background: cardBg, borderTopColor: accentColor }" hover-class="stat-card--hover" @tap="onTap">
     <app-icon :name="icon" :tone="tone" variant="solid" size="md" />
     <view class="stat-card__main">
       <text class="stat-card__value">{{ value }}</text>
@@ -29,7 +29,8 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{ (e: 'tap'): void }>();
 
-const cardBg = computed(() => ICON_TONE_META[props.tone].bg);
+const cardBg = computed(() => '#FFFFFF');
+const accentColor = computed(() => ICON_TONE_META[props.tone].color);
 
 function onTap(): void {
   emit('tap');
@@ -40,12 +41,20 @@ function onTap(): void {
 .stat-card {
   flex: 1;
   @include flex-row();
-  padding: 24rpx 20rpx;
-  border-radius: 12rpx;
+  min-height: 132rpx;
+  box-sizing: border-box;
+  padding: 22rpx 20rpx;
+  border: 1rpx solid $border;
+  border-top-width: 5rpx;
+  border-radius: 18rpx;
+  box-shadow: 0 6rpx 18rpx rgba(29, 33, 41, 0.035);
+  transition: transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
 }
 
 .stat-card--hover {
-  opacity: 0.85;
+  opacity: 0.94;
+  transform: scale(0.985);
+  box-shadow: 0 2rpx 8rpx rgba(29, 33, 41, 0.035);
 }
 
 .stat-card__main {
@@ -57,7 +66,8 @@ function onTap(): void {
 .stat-card__value {
   display: block;
   font-size: 44rpx;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -1rpx;
   line-height: 1.1;
   color: $text-1;
 }

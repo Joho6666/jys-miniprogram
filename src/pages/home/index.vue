@@ -200,7 +200,7 @@ function goMessage(message: Message): void {
 .hero {
   position: relative;
   overflow: hidden;
-  background: $primary;
+  background: linear-gradient(145deg, $primary 0%, $primary-pressed 100%);
   /* 底部留出剪影带的高度，文案与剪影互不重叠 */
   padding-bottom: 196rpx;
 }
@@ -226,6 +226,8 @@ function goMessage(message: Message): void {
   height: 320rpx;
   top: -140rpx;
   right: -70rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 34rpx rgba(255, 255, 255, 0.035), 0 0 0 72rpx rgba(255, 255, 255, 0.025);
 }
 
 .hero__circle--sm {
@@ -257,7 +259,9 @@ function goMessage(message: Message): void {
   height: 34rpx;
   padding: 0 14rpx;
   border-radius: 17rpx;
-  border: 1rpx solid rgba(255, 255, 255, 0.55);
+  border: 1rpx solid rgba(255, 255, 255, 0.48);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.16);
   font-size: 20rpx;
   color: $white;
   line-height: 32rpx;
@@ -265,9 +269,10 @@ function goMessage(message: Message): void {
 
 .hero__greeting {
   display: block;
-  margin-top: 28rpx;
+  margin-top: 32rpx;
   font-size: 48rpx;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 1rpx;
   color: $white;
 }
 
@@ -284,25 +289,35 @@ function goMessage(message: Message): void {
   right: 24rpx;
   bottom: -6rpx;
   z-index: 1;
-  opacity: 0.95;
+  opacity: 0.82;
+  transform: scale(1.04);
+  transform-origin: right bottom;
 }
 
 /* ---------- 统计 ---------- */
 .stats {
   position: relative;
   z-index: 3;
-  padding: 0 32rpx;
-  margin-top: 24rpx;
+  padding: 18rpx;
+  margin: -28rpx 24rpx 0;
+  border: 1rpx solid rgba(229, 231, 235, 0.9);
+  border-radius: 26rpx;
+  background: $surface;
+  box-shadow: 0 14rpx 38rpx rgba(29, 33, 41, 0.075);
 }
 
 .stats__row {
   display: flex;
   flex-direction: row;
-  margin-bottom: 16rpx;
+  margin-bottom: 12rpx;
 }
 
 .stats__row .stat-card + .stat-card {
-  margin-left: 16rpx;
+  margin-left: 12rpx;
+}
+
+.stats__row:last-child {
+  margin-bottom: 0;
 }
 
 /* ---------- 主体 ---------- */
@@ -321,10 +336,13 @@ function goMessage(message: Message): void {
 /* ---------- 驳回提醒 ---------- */
 .alert {
   @include flex-row();
-  margin: 24rpx 32rpx 0;
-  padding: 24rpx;
+  margin: 28rpx 32rpx 0;
+  padding: 22rpx 24rpx;
+  border: 1rpx solid $danger-border;
+  border-left-width: 6rpx;
   background: $danger-bg;
-  border-radius: $radius-card;
+  border-radius: 18rpx;
+  box-shadow: 0 8rpx 20rpx rgba(255, 77, 79, 0.06);
 }
 
 .alert--hover {
@@ -364,14 +382,20 @@ function goMessage(message: Message): void {
   display: flex;
   flex-direction: row;
   background: $surface;
-  border-radius: $radius-card;
-  padding: 32rpx 0;
+  border: 1rpx solid $border;
+  border-radius: 20rpx;
+  padding: 24rpx 0;
+  box-shadow: 0 8rpx 24rpx rgba(29, 33, 41, 0.035);
 }
 
 .grid__item {
   flex: 1;
   @include flex-center;
   flex-direction: column;
+}
+
+.grid__item + .grid__item {
+  border-left: 1rpx solid $border;
 }
 
 .grid__item--hover {
@@ -387,13 +411,19 @@ function goMessage(message: Message): void {
 /* ---------- 最近动态 ---------- */
 .activity {
   background: $surface;
-  border-radius: $radius-card;
+  border: 1rpx solid $border;
+  border-radius: 20rpx;
   padding: 0 28rpx;
+  box-shadow: 0 8rpx 24rpx rgba(29, 33, 41, 0.035);
 }
 
 .activity__row {
   @include flex-row(space-between);
   height: 96rpx;
+}
+
+.activity__row + .activity__row {
+  border-top: 1rpx solid $border;
 }
 
 .activity__row--hover {

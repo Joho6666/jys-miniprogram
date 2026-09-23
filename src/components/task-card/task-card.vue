@@ -61,14 +61,21 @@ function onTap(): void {
 
 <style lang="scss" scoped>
 .task-card {
+  position: relative;
+  overflow: hidden;
   background: $surface;
-  border-radius: $radius-card;
-  padding: 24rpx 32rpx;
+  border: 1rpx solid $border;
+  border-radius: 20rpx;
+  padding: 26rpx 28rpx 22rpx;
   margin-bottom: 20rpx;
+  box-shadow: 0 8rpx 24rpx rgba(29, 33, 41, 0.045);
+  transition: transform 160ms ease, box-shadow 160ms ease;
 }
 
 .task-card--hover {
   background: $pressed;
+  transform: translateY(1rpx) scale(0.995);
+  box-shadow: 0 3rpx 10rpx rgba(29, 33, 41, 0.035);
 }
 
 .task-card__head {
@@ -76,11 +83,15 @@ function onTap(): void {
 }
 
 .task-card__remain {
+  padding: 6rpx 12rpx;
+  border-radius: 20rpx;
+  background: $bg;
   font-size: $font-tag;
   color: $text-3;
 }
 
 .task-card__remain--danger {
+  background: $danger-bg;
   color: $danger;
 }
 
@@ -128,8 +139,8 @@ function onTap(): void {
 
 .task-card__foot {
   @include flex-row(space-between);
-  margin-top: 16rpx;
-  padding-top: 16rpx;
+  margin-top: 20rpx;
+  padding-top: 18rpx;
   border-top: 1rpx solid $border;
 }
 
