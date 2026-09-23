@@ -6,7 +6,7 @@
 - **小程序名称**：教研室事务助手
 - **技术栈**：uni-app + Vue 3 + TypeScript + Vite + Pinia + SCSS + dayjs
 - **目标端**：微信小程序（`mp-weixin`）为主，H5 用于调试与自动化验收
-- **当前阶段**：前端 MVP（Mock Data + Mock Service），**所有数据均通过 `src/services` 与 `src/api` 访问**，页面内不含散落数据，可在不改动页面的前提下切换真实后端。
+- **当前阶段**：Mock 演示闭环已具备，正在通过统一 Adapter 对接 Spring Boot `/api/v1`。Mock、Demo 与真实后端模式彼此独立，页面不直接依赖数据来源。
 
 ---
 
@@ -24,7 +24,32 @@ npm run dev:mp-weixin     # 开发模式（watch）
 
 # 类型检查
 npm run type-check        # vue-tsc --noEmit，当前零错误
+
+# 单元测试
+npm run test              # Vitest：领域派生与格式化等纯逻辑
 ```
+
+### 运行模式
+
+复制 `.env.example` 为不提交的 `.env.local`，按用途配置：
+
+```dotenv
+VITE_API_BASE=http://localhost:8080
+VITE_USE_MOCK=true
+VITE_DEMO_MODE=false
+VITE_WECHAT_APPID=
+```
+
+| 场景 | `VITE_USE_MOCK` | `VITE_DEMO_MODE` | 说明 |
+| --- | --- | --- | --- |
+| 本地离线开发 | `true` | `false` | 使用 Mock Adapter，不显示演示控制 |
+| 自动化/现场演示 | `true` | `true` | 允许隔离的身份切换、模拟审核和数据重置 |
+| Spring Boot 联调 | `false` | `false` | 使用 `VITE_API_BASE` 下的真实 `/api/v1` |
+| 正式构建 | `false` | `false` | 禁止 Mock 与 Demo；同时配置合法域名和 AppID |
+
+环境变量中不得保存 AppSecret、JWT Secret、数据库密码或真实 Token。详细说明见
+[`docs/api-integration.md`](docs/api-integration.md)、[`docs/demo-mode.md`](docs/demo-mode.md) 和
+[`docs/release-checklist.md`](docs/release-checklist.md)。
 
 ### 在微信开发者工具中打开
 
@@ -150,9 +175,8 @@ jys-miniprogram/
 VITE_API_BASE=https://api.example.edu.cn
 ```
 
-`src/services/request.ts` 通过 `API_BASE` 判定：为空 = 本地 Mock；非空 = 真实请求。
-接入时把 `api/*.ts` 内的实现由 Mock 函数替换为 `uni.request`（统一封装在 `request.ts` 内），
-页面与 store 无需改动。
+数据来源由 `VITE_USE_MOCK` 显式决定，`VITE_API_BASE` 只负责真实服务地址。页面与 Store 只调用统一 API 接口；
+Mock Adapter 和 HTTP Adapter 负责返回一致的前端 DTO。
 
 > 安全约定：接口地址与凭据只从环境变量读取，仓库内不写入任何真实地址或密钥；
 > 服务端若需代理外部 URL，仅允许 http/https，并拒绝 localhost、环回、私有与保留地址。
@@ -173,7 +197,8 @@ VITE_API_BASE=https://api.example.edu.cn
 | GET | `/api/v1/users/me` | 当前教师档案 | `User` |
 | POST | `/api/v1/files` | 文件上传（multipart，返回 objectKey） | `{ objectKey }` |
 
-请求/响应字段与 `src/types/*` 一一对应；时间统一为 `YYYY-MM-DD HH:mm`，文件体积字段为 `sizeKB`。
+Spring Boot 生成的 OpenAPI 是正式传输契约；时间统一使用 ISO-8601，文件体积统一使用字节。
+旧页面模型中的 `YYYY-MM-DD HH:mm` 和 `sizeKB` 仅由适配层转换，不应继续扩散到网络 DTO。
 
 ---
 

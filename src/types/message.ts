@@ -6,11 +6,15 @@ import type { IconTone } from './common';
 /** 消息业务事件 */
 export type MessageEvent =
   | 'NEW_TASK'
+  | 'TASK_ASSIGNED'
+  | 'TASK_UPDATED'
   | 'DUE_SOON'
+  | 'OVERDUE'
   | 'SUBMITTED'
   | 'REVIEW_APPROVED'
   | 'REVIEW_REJECTED'
-  | 'NOTICE';
+  | 'NOTICE'
+  | 'SYSTEM';
 
 export interface Message {
   id: string;
@@ -27,7 +31,11 @@ export interface Message {
   submissionId?: string;
   /** 审核意见（审核类消息展示子块） */
   opinion?: string;
+  targetType?: 'TASK' | 'SUBMISSION' | 'SYSTEM';
+  targetId?: string;
 }
+
+export type Notification = Message;
 
 /** 消息筛选键 */
 export type MessageFilterKey = 'ALL' | MessageType;
@@ -41,9 +49,13 @@ export const MESSAGE_TYPE_META: Record<MessageType, { label: string; tile: strin
 /** 消息圆形图标（按业务事件取图标与色调，app-icon 消费） */
 export const MESSAGE_EVENT_META: Record<MessageEvent, { icon: string; tone: IconTone }> = {
   NEW_TASK: { icon: 'notification', tone: 'primary' },
+  TASK_ASSIGNED: { icon: 'notification', tone: 'primary' },
+  TASK_UPDATED: { icon: 'notification', tone: 'primary' },
   DUE_SOON: { icon: 'notification', tone: 'warning' },
+  OVERDUE: { icon: 'info', tone: 'danger' },
   SUBMITTED: { icon: 'paperplane', tone: 'primary' },
   REVIEW_APPROVED: { icon: 'checkmarkempty', tone: 'success' },
   REVIEW_REJECTED: { icon: 'closeempty', tone: 'danger' },
   NOTICE: { icon: 'sound', tone: 'primary' },
+  SYSTEM: { icon: 'sound', tone: 'neutral' },
 };

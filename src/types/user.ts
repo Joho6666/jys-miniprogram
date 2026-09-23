@@ -9,4 +9,11 @@ export interface User {
   avatarText: string;
   /** 本学期任务总数（统计展示用） */
   termTaskCount: number;
+  username?: string;
+  employeeNo?: string;
+  departmentId?: string;
+  roles?: Array<'SUPER_ADMIN' | 'COLLEGE_ADMIN' | 'DEPARTMENT_ADMIN' | 'TEACHING_SECRETARY' | 'TEACHER'>;
+  enabled?: boolean;
 }
+
+export type UserProfile = User;

@@ -1,7 +1,17 @@
 import type { BizStatus, FileFormat } from './common';
 
 /** 提交单状态 */
-export type SubmissionStatus = 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
+export type SubmissionStatus = 'DRAFT' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED' | 'WITHDRAWN';
+
+export interface Review {
+  id: string;
+  submissionId: string;
+  reviewerId: string;
+  reviewerName: string;
+  approved: boolean;
+  comment: string;
+  reviewedAt: string;
+}
 
 /** 已提交文件 */
 export interface SubmittedFile {
@@ -9,6 +19,16 @@ export interface SubmittedFile {
   name: string;
   format: FileFormat;
   sizeKB: number;
+  uploadedAt: string;
+}
+
+/** 后端文件元数据；size 始终以字节为单位。 */
+export interface FileMetadata {
+  id: string;
+  name: string;
+  size: number;
+  mimeType: string;
+  extension: string;
   uploadedAt: string;
 }
 
@@ -39,6 +59,9 @@ export interface Submission {
   reviewedAt?: string;
   reviewOpinion?: string;
   reviewerName?: string;
+  assignmentId?: string;
+  userId?: string;
+  reviews?: Review[];
 }
 
 /** 提交单视图（含同任务版本链） */

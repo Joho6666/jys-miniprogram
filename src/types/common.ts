@@ -38,6 +38,14 @@ export const STATUS_META: Record<BizStatus, StatusMeta> = {
 /** 支持上传的文件格式 */
 export type FileFormat = 'PDF' | 'DOC' | 'DOCX' | 'XLS' | 'XLSX' | 'PPT' | 'PPTX' | 'JPG' | 'PNG';
 
+export interface PageResult<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  total: number;
+  hasMore: boolean;
+}
+
 /* ---------------------------------------------------------------------
    任务紧急度（设计规范：任务卡展示「紧急 / 即将截止 / 普通」）
    与业务状态互补：待审核 / 已驳回 / 已完成 显示业务状态，其余显示紧急度

@@ -26,6 +26,19 @@ export interface TaskAttachment {
   note: string;
 }
 
+/** 当前用户对任务的执行分配。任务本身与教师执行状态分离。 */
+export interface TaskAssignment {
+  id: string;
+  taskId: string;
+  userId: string;
+  status: TaskStoredStatus;
+  derivedStatus?: Extract<BizStatus, 'DUE_SOON' | 'OVERDUE'>;
+  required: boolean;
+  completedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -48,6 +61,15 @@ export interface Task {
   guide?: string;
   attachments: TaskAttachment[];
   status: TaskStoredStatus;
+  /** 后端任务定义字段；旧 Mock 数据缺省时由适配层补齐。 */
+  priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  assignmentType?: 'ALL' | 'DEPARTMENT' | 'SELECTED_USERS';
+  allowLateSubmission?: boolean;
+  requireReview?: boolean;
+  departmentId?: string;
+  departmentName?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 /** 任务视图（存储态 + 派生态，供列表/详情直接渲染） */
@@ -62,6 +84,10 @@ export interface TaskView extends Task {
   latestVersion?: number;
   /** 已驳回时的一行审核摘要 */
   rejectSummary?: string;
+  assignmentId?: string;
+  assignmentStatus?: TaskStoredStatus;
+  submissionStatus?: import('./submission').SubmissionStatus;
+  assignment?: TaskAssignment;
 }
 
 /** 任务列表筛选键（与「我的待办」标签页一一对应） */
@@ -69,6 +95,7 @@ export type TaskFilterKey =
   | 'ALL'
   | 'URGENT'
   | 'DUE_SOON'
+  | 'OVERDUE'
   | 'PENDING_REVIEW'
   | 'REJECTED'
   | 'COMPLETED';

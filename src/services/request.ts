@@ -14,6 +14,26 @@ export const API_BASE: string = (import.meta.env.VITE_API_BASE as string | undef
 /** 是否处于本地 Mock 模式 */
 export const IS_MOCK: boolean = API_BASE === '' || import.meta.env.VITE_USE_MOCK === 'true';
 
+export const DEMO_MODE: boolean = import.meta.env.VITE_DEMO_MODE === 'true';
+
+export function readAccessToken(): string {
+  return String(uni.getStorageSync('accessToken') || '');
+}
+
+export function readRefreshToken(): string {
+  return String(uni.getStorageSync('refreshToken') || '');
+}
+
+export function saveTokens(accessToken: string, refreshToken?: string): void {
+  if (accessToken) uni.setStorageSync('accessToken', accessToken);
+  if (refreshToken) uni.setStorageSync('refreshToken', refreshToken);
+}
+
+export function clearTokens(): void {
+  uni.removeStorageSync('accessToken');
+  uni.removeStorageSync('refreshToken');
+}
+
 const MOCK_DELAY = 300;
 
 /** 模拟异步返回（返回深拷贝，隔离页面与内存库） */

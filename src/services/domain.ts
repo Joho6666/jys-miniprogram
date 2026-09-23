@@ -78,9 +78,9 @@ export function buildTaskView(task: Task, submissions: Submission[]): TaskView {
 
 /** 版本时间线节点（版本升序） */
 export function buildVersionNodes(submissions: Submission[]): VersionNode[] {
-  const latestId = submissions.length ? submissions[submissions.length - 1].id : '';
-  return [...submissions]
-    .sort((a, b) => a.version - b.version)
+  const sorted = [...submissions].sort((a, b) => a.version - b.version);
+  const latestId = sorted.length ? sorted[sorted.length - 1].id : '';
+  return sorted
     .map((s) => ({
       submissionId: s.id,
       version: s.version,

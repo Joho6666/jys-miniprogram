@@ -7,10 +7,10 @@ import { urgencyOf } from '@/services/domain';
 /** 「我的待办」标签页（设计规范：全部 / 紧急 / 即将截止 / 待审核 / 已驳回 / 已完成） */
 export const TASK_FILTERS: Array<{ key: TaskFilterKey; label: string }> = [
   { key: 'ALL', label: '全部' },
-  { key: 'URGENT', label: '紧急' },
   { key: 'DUE_SOON', label: '即将截止' },
   { key: 'PENDING_REVIEW', label: '待审核' },
   { key: 'REJECTED', label: '已驳回' },
+  { key: 'OVERDUE', label: '已逾期' },
   { key: 'COMPLETED', label: '已完成' },
 ];
 
@@ -23,6 +23,7 @@ const FILTER_PREDICATES: Record<TaskFilterKey, (task: TaskView) => boolean> = {
   ALL: () => true,
   URGENT: (t) => ACTIONABLE.includes(t.bizStatus) && urgencyOf(t.deadline) === 'URGENT',
   DUE_SOON: (t) => ACTIONABLE.includes(t.bizStatus) && urgencyOf(t.deadline) === 'SOON',
+  OVERDUE: (t) => t.bizStatus === 'OVERDUE',
   PENDING_REVIEW: (t) => t.bizStatus === 'PENDING_REVIEW',
   REJECTED: (t) => t.bizStatus === 'REJECTED',
   COMPLETED: (t) => CLOSED.includes(t.bizStatus),
@@ -34,6 +35,10 @@ export const useTaskStore = defineStore('task', () => {
   const loading = ref(false);
   const detailLoading = ref(false);
   const error = ref('');
+  const page = ref(1);
+  const pageSize = ref(20);
+  const hasMore = ref(true);
+  const loadingMore = ref(false);
 
   const filter = ref<TaskFilterKey>('ALL');
   const keyword = ref('');
@@ -97,15 +102,23 @@ export const useTaskStore = defineStore('task', () => {
 
   async function loadTasks(force = false): Promise<void> {
     if (tasks.value.length && !force) return;
+    page.value = 1; hasMore.value = true;
     loading.value = true;
     error.value = '';
     try {
-      tasks.value = await fetchTasks();
+      const next = await fetchTasks({ page: 1, size: pageSize.value, keyword: keyword.value });
+      tasks.value = next; hasMore.value = next.length >= pageSize.value;
     } catch (e) {
       error.value = e instanceof Error ? e.message : '任务加载失败';
     } finally {
       loading.value = false;
     }
+  }
+
+  async function loadMore(): Promise<void> {
+    if (loadingMore.value || !hasMore.value) return;
+    loadingMore.value = true;
+    try { const nextPage = page.value + 1; const next = await fetchTasks({ page: nextPage, size: pageSize.value, keyword: keyword.value }); tasks.value = [...tasks.value, ...next]; page.value = nextPage; hasMore.value = next.length >= pageSize.value; } catch (e) { error.value = e instanceof Error ? e.message : '加载更多失败'; } finally { loadingMore.value = false; }
   }
 
   async function loadDetail(taskId: string): Promise<void> {
@@ -151,7 +164,12 @@ export const useTaskStore = defineStore('task', () => {
     urgentTasks,
     rejectedTasks,
     pendingTasks,
+    page,
+    pageSize,
+    hasMore,
+    loadingMore,
     loadTasks,
+    loadMore,
     loadDetail,
     getById,
     setFilter,
