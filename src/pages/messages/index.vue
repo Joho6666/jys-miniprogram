@@ -21,7 +21,7 @@
 
     <view class="list">
       <loading-state v-if="messageStore.loading" />
-      <error-state v-else-if="messageStore.error" :desc="messageStore.error" @retry="reload" />
+      <error-state v-else-if="messageStore.error && !messageStore.messages.length" :desc="messageStore.error" @retry="reload" />
       <empty-state v-else-if="!filtered.length" title="暂无消息" desc="任务通知与审核结果会在这里提醒你。" />
       <message-row
         v-for="message in filtered"
@@ -32,6 +32,9 @@
         @tap="onMessageTap(message)"
         @action="onMessageAction(message)"
       />
+      <view v-if="messageStore.loadingMore" class="list__footer">加载中…</view>
+      <view v-else-if="messageStore.error && messageStore.messages.length" class="list__footer list__footer--retry" @tap="messageStore.loadMore()">加载失败，点击重试</view>
+      <view v-else-if="!messageStore.hasMore && messageStore.messages.length" class="list__footer">没有更多了</view>
     </view>
 
     <app-tab-bar current="messages" />
@@ -40,7 +43,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { onShow } from '@dcloudio/uni-app';
+import { onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
 import type { Message, MessageFilterKey } from '@/types';
 import { MESSAGE_FILTERS, useMessageStore } from '@/stores/message';
 import { usePageShare } from '@/services/share';
@@ -64,6 +67,8 @@ const tabs = computed(() =>
 onShow(async () => {
   await messageStore.loadMessages();
 });
+onPullDownRefresh(async () => { await messageStore.loadMessages(true); uni.stopPullDownRefresh(); });
+onReachBottom(() => { void messageStore.loadMore(); });
 
 function countOf(key: MessageFilterKey): number {
   if (key === 'ALL') return messageStore.counts.ALL;
@@ -187,4 +192,6 @@ async function onMessageAction(message: Message): Promise<void> {
 .list {
   padding: 24rpx 32rpx 0;
 }
+.list__footer { padding: 28rpx; text-align: center; color: $text-3; font-size: $font-tag; }
+.list__footer--retry { color: $primary; }
 </style>

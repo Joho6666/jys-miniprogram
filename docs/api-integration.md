@@ -41,11 +41,15 @@ VITE_WECHAT_APPID=
 - 认证：`/auth/login`、`/auth/wechat`、`/auth/bind`、`/auth/refresh`、`/auth/logout`
 - 当前用户：`/users/me`
 - Dashboard：`/dashboard/me`
-- 任务：`/tasks`、`/tasks/{id}`、`/tasks/{id}/submissions`
+- 任务：`/tasks`、`/tasks/{id}`；详情的 `latestSubmissionId` 用于加载有权限校验的提交详情
 - 提交：`/submissions`、`/submissions/{id}`
-- 文件：`/files`、`/files/{id}`、`/files/{id}/download`
+- 文件：`POST /files`、`GET /files/{id}`、`DELETE /files/{id}`、`GET /files/{id}/download`
 - 消息：`/messages`、`/messages/unread-count`、`/messages/{id}/read`、`/messages/read-all`
 - 反馈：`/feedback`
+
+任务列表发送 `page`、`pageSize`、`keyword`、`status`；消息列表发送 `page` 与 `size`。后端 OpenAPI 尚未提供独立的“按任务取最新提交”路由时，客户端先从任务详情读取 `latestSubmissionId`，再请求提交详情。若详情没有该字段，Real Mode 重新提交需要后端补充契约。
+
+上传与下载使用 access token；上传使用 `uploadTask.onProgressUpdate`。下载 403/404 转为无权/不存在提示。订阅模板从 `VITE_WECHAT_SUBSCRIBE_TEMPLATE_IDS` 读取，拒绝授权不影响业务。
 
 ## 联调检查
 

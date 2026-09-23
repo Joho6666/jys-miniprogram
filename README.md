@@ -38,6 +38,7 @@ VITE_API_BASE=http://localhost:8080
 VITE_USE_MOCK=true
 VITE_DEMO_MODE=false
 VITE_WECHAT_APPID=
+VITE_WECHAT_SUBSCRIBE_TEMPLATE_IDS=
 ```
 
 | 场景 | `VITE_USE_MOCK` | `VITE_DEMO_MODE` | 说明 |
@@ -71,14 +72,14 @@ VITE_WECHAT_APPID=
 jys-miniprogram/
 ├─ design/stitch/          # Stitch 设计稿（实现参考，不参与构建）
 ├─ src/
-│  ├─ api/                 # 类型化接口层（task / submission / message / user）
+│  ├─ api/                 # 接口与 DTO Mapper（task / submission / message / user / file / dashboard）
 │  ├─ services/            # 数据入口：request(mock↔real 切换)、domain(状态派生)、
 │  │                       #   format(格式化)、navigation(跳转规则)、picker(跨端文件选择)、nav(胶囊适配)
 │  ├─ mock/                # 唯一数据源：tasks / submissions / messages / users / handlers(状态流转) / db(时间基准)
-│  ├─ stores/              # Pinia：user / task / submission / message
+│  ├─ stores/              # Pinia：auth / user / task / submission / message / dashboard
 │  ├─ types/               # 实体与枚举：common(8 态 + 文件格式) / task / submission / message / user / upload
 │  ├─ components/          # 18 个公共组件（easycom：组件名/组件名.vue）
-│  ├─ pages/               # 11 个页面
+│  ├─ pages/               # 13 个页面（含登录、意见反馈）
 │  ├─ styles/              # variables.scss(设计令牌) / mixins.scss / global.scss
 │  ├─ pages.json           # 页面与全局样式（自定义导航，无原生 tabBar）
 │  └─ manifest.json
@@ -143,8 +144,8 @@ jys-miniprogram/
 
 ## 五、页面与组件
 
-**11 个页面**：首页 · 我的待办 · 任务详情 · 提交材料 · 提交成功 · 提交详情 · 审核结果 ·
-重新提交 · 消息提醒 · 我的 · 我的提交
+**13 个页面**：登录 · 首页 · 我的待办 · 任务详情 · 提交材料 · 提交成功 · 提交详情 · 审核结果 ·
+重新提交 · 消息提醒 · 我的 · 我的提交 · 意见反馈
 
 **21 个公共组件**：`AppNavBar`（状态栏 + 微信胶囊避让）· `AppTabBar`（自定义四项导航 + 未读角标）·
 `AppIcon`（图标统一出口）· `StatusTag`（业务状态 + 紧急度徽标）· `FilterTabs`（下划线标签页）·
@@ -152,7 +153,7 @@ jys-miniprogram/
 `SearchBar` · `SectionHeader` · `MessageRow` · `StatCard` · `GroupListCell` · `ResultState` ·
 `EmptyState` · `ErrorState` · `LoadingState` · `ConfirmModal` · `Timeline`
 
-**已跑通的业务闭环**（H5 端自动化验收已验证）：
+**Mock Adapter 闭环**（Vitest 集成验证）：
 
 1. 任务列表筛选"待审核" → 任务详情 → 查看提交详情
 2. 提交详情「模拟审核」面板填写意见 → 驳回
@@ -160,7 +161,9 @@ jys-miniprogram/
 4. 重新提交页（原文件预填、可替换/删除、生成 V2）→ 确认弹窗 → 提交成功
 5. 提交详情版本时间线：V1 已驳回（含审核人/意见）→ V2 待审核
 6. 模拟审核「通过」→ 审核结果页（通过态）→ 任务状态联动为"已完成"
-7. 消息页新增 3 条消息（提交/驳回/通过）、未读角标 5；首页统计联动（待审核 1→0、已完成 21→22）
+7. 消息页新增提交/驳回/通过消息；Dashboard 统计随任务状态更新
+
+当前 H5 页面级自动化 Golden Path 尚未运行；Mock Adapter 的登录、V1 驳回、V2 通过及 Dashboard 联动测试已通过。
 
 > 「模拟审核」是演示功能：正式环境由教研室内审人在管理端操作，前端只需调用同一接口。
 
@@ -202,11 +205,10 @@ Spring Boot 生成的 OpenAPI 是正式传输契约；时间统一使用 ISO-860
 
 ---
 
-## 七、已知限制与后续计划
+## 七、当前完成状态
 
-- **未实现**：登录/授权页（按需求从"登录后教师端"开始，身份走 mock）、文件记录 / 消息设置 /
-  帮助与反馈（当前为克制的占位提示）、真实文件上传与预览（H5 端为进度模拟）。
-- **小程序端**：产物已通过静态校验（11 页 + 组件注册完整），并已在微信开发者工具中打开编译通过；
-  交互验收以 H5 自动化为准，小程序端可在模拟器中直接操作。
-- 后续可扩展：任务列表分页与下拉刷新、消息推送（订阅消息）、审核人角色与工作台、
-  多教研室隔离。
+- **完成**：登录/账号绑定与 Token 刷新骨架、任务状态筛选和分页 Adapter、Dashboard API/Mock Adapter、DTO Mapper、消息未读数与分页、真实文件上传/下载/预览 Adapter、退出登录、意见反馈入口。
+- **基础完成**：Real Mode 启动鉴权与重提交链、提交版本链映射、订阅消息授权入口。重提交依赖任务详情返回 `latestSubmissionId`；后端真实契约和服务仍需联调确认。
+- **待真实联调**：Spring Boot API、文件存储、接口权限和反馈提交；本机 8080 后端未运行，不能以 Mock 验证代替。
+- **待微信凭据/真机**：订阅模板 ID、合法域名、微信开发者工具与真机上的文件选择/预览、授权和分享行为。
+- 当前页面级 H5 自动化 Golden Path：`NOT_TESTED`；Mock Adapter Golden Path 单元集成：见 `docs/miniprogram-delivery-report.md`。

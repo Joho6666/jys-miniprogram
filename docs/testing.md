@@ -9,13 +9,13 @@ npm run build:h5
 npm run build:mp-weixin
 ```
 
-`npm run test` 使用 Vitest 执行纯领域与格式化测试。测试不得依赖当前真实时间而导致跨天不稳定；涉及截止时间时应冻结系统时间。
+`npm run test` 使用 Vitest。截止时间测试冻结系统时间。
 
 ## 测试层次
 
-- 单元测试：状态派生、徽标、格式化、DTO 映射、错误映射、刷新锁、上传状态机。
+- 单元测试：状态派生、格式化、Task/Submission DTO 映射、refresh 并发锁与失败清理、TaskStore 分页/过滤/重置、Auth 登录/绑定/登出、文件校验。
 - 组件测试：加载、空、错误、分页失败、提交禁用与重试状态。
-- Mock H5 E2E：从登录到 V2 审核通过的完整演示闭环。
+- Mock Adapter Golden Path：登录、V1 驳回、V2 通过及 Dashboard 更新（Vitest）。页面级 H5 E2E 状态单独报告。
 - 真实后端 E2E：登录、授权范围、上传下载、驳回重交和统计联动。
 - 微信开发者工具：导航、安全区、授权、上传、下载、文档打开和机型布局。
 

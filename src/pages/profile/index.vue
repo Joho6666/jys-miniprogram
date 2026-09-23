@@ -6,11 +6,11 @@
       <app-nav-bar title="我的" :show-back="false" transparent theme="light" />
       <view class="hero__body">
         <view class="hero__avatar">
-          <text class="hero__avatar-text">{{ user?.avatarText || '张' }}</text>
+          <text class="hero__avatar-text">{{ user?.avatarText || (isMockMode() ? '张' : '') }}</text>
         </view>
         <view class="hero__main">
-          <text class="hero__name">{{ user?.name || '张老师' }}</text>
-          <text class="hero__org">{{ user?.title || '教师' }} | {{ user?.office || '工程管理教研室' }}</text>
+          <text class="hero__name">{{ user?.name || (isMockMode() ? '张老师' : '') }}</text>
+          <text class="hero__org">{{ user?.title || (isMockMode() ? '教师' : '') }}<template v-if="user?.office"> | {{ user.office }}</template></text>
         </view>
       </view>
       <view class="hero__art">
@@ -61,7 +61,10 @@ import { computed, ref } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import type { IconTone } from '@/types';
 import { useUserStore } from '@/stores/user';
+import { useAuthStore } from '@/stores/auth';
+import { requestSubscribeMessage } from '@/services/subscribe';
 import { usePageShare } from '@/services/share';
+import { isMockMode } from '@/services/http';
 
 usePageShare(() => ({ title: '教研室事务助手 · 教师端', path: '/pages/profile/index' }));
 
@@ -83,11 +86,10 @@ interface MenuItem {
 const MENU: MenuItem[] = [
   { key: 'submissions', title: '我的提交记录', icon: 'list', tone: 'primary', url: '/pages/submissions/index' },
   { key: 'completed', title: '我的已完成任务', icon: 'checkmarkempty', tone: 'success', url: '/pages/tasks/index?filter=COMPLETED', tab: true },
-  { key: 'favorite', title: '我的收藏', icon: 'star', tone: 'warning', todo: true },
   { key: 'help', title: '帮助中心', icon: 'help', tone: 'primary', todo: true },
-  { key: 'feedback', title: '意见反馈', icon: 'compose', tone: 'primary', todo: true },
+  { key: 'feedback', title: '意见反馈', icon: 'compose', tone: 'primary', url: '/pages/feedback/index' },
   { key: 'about', title: '关于我们', icon: 'info', tone: 'primary' },
-  { key: 'settings', title: '设置', icon: 'gear', tone: 'neutral', todo: true },
+  { key: 'settings', title: '消息设置', icon: 'gear', tone: 'neutral' },
 ];
 
 const userStore = useUserStore();
@@ -108,6 +110,8 @@ function onMenu(item: MenuItem): void {
     });
     return;
   }
+  if (item.key === 'help') { uni.showModal({ title: '帮助中心', content: '如何提交材料？进入任务详情并选择“去提交材料”。\n\n如何重新提交？在已驳回任务中查看审核意见并选择“修改并重新提交”。\n\n如何查看消息？点击底部“消息”查看通知和审核结果。', showCancel: false }); return; }
+  if (item.key === 'settings') { void requestSubscribeMessage().then(() => uni.showToast({ title: '订阅设置已提交', icon: 'success' })).catch((error: Error) => uni.showToast({ title: error.message, icon: 'none' })); return; }
   if (item.todo) {
     uni.showToast({ title: `${item.title}功能开发中`, icon: 'none' });
     return;
@@ -120,9 +124,10 @@ function onMenu(item: MenuItem): void {
   uni.navigateTo({ url: item.url });
 }
 
-function doLogout(): void {
+async function doLogout(): Promise<void> {
   logoutVisible.value = false;
-  uni.showToast({ title: '演示环境：已模拟退出登录', icon: 'none' });
+  try { await useAuthStore().logout(); } catch { /* Local session is cleared in finally. */ }
+  uni.reLaunch({ url: '/pages/login/index' });
 }
 </script>
 

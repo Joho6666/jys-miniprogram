@@ -28,6 +28,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { onShow } from '@dcloudio/uni-app';
 import { useMessageStore } from '@/stores/message';
 
 type TabKey = 'home' | 'tasks' | 'messages' | 'profile';
@@ -64,6 +65,7 @@ const TABS: TabItem[] = [
 
 const messageStore = useMessageStore();
 const unreadCount = computed(() => messageStore.unreadCount);
+onShow(() => { void messageStore.loadUnreadCount(); });
 
 function switchTo(tab: TabItem): void {
   if (tab.key === 'home' || tab.key === 'tasks' || tab.key === 'messages' || tab.key === 'profile') {

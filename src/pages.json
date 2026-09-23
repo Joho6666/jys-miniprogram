@@ -16,11 +16,11 @@
     },
     {
       "path": "pages/tasks/index",
-      "style": { "navigationBarTitleText": "我的任务" }
+      "style": { "navigationBarTitleText": "我的任务", "enablePullDownRefresh": true }
     },
     {
       "path": "pages/messages/index",
-      "style": { "navigationBarTitleText": "消息" }
+      "style": { "navigationBarTitleText": "消息", "enablePullDownRefresh": true }
     },
     {
       "path": "pages/profile/index",
@@ -53,6 +53,10 @@
     {
       "path": "pages/submissions/index",
       "style": { "navigationBarTitleText": "我的提交" }
+    },
+    {
+      "path": "pages/feedback/index",
+      "style": { "navigationBarTitleText": "意见反馈" }
     }
   ],
   "globalStyle": {

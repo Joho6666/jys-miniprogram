@@ -55,7 +55,7 @@
 
 ### `GET /api/v1/tasks/{taskId}`
 
-返回任务与当前用户 assignment 的详情，包括附件模板、当前提交/审核摘要和任务历史。后端必须确认当前 Token 对该任务具有访问权限。
+返回任务与当前用户 assignment 的详情，包括附件模板、当前提交/审核摘要（至少包含 `latestSubmissionId`、版本、审核意见和审核人）和任务历史。前端使用 `latestSubmissionId` 再请求提交详情读取原文件和完整版本链。后端必须确认当前 Token 对该任务具有访问权限。
 
 ## SUBMISSION
 

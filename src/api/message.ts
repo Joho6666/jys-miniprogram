@@ -3,17 +3,18 @@ import { db, handleMarkAllRead, handleMarkRead, messagesSorted } from '@/mock/ha
 import { mockCopy, mockOk } from '@/services/request';
 import { get, post, isMockMode } from '@/services/http';
 import type { PageResult } from '@/types';
+import { toMessage } from './mappers/message.mapper';
 
 /** 全部消息（按时间倒序） */
-export function fetchMessages(): Promise<Message[]> {
-  if (!isMockMode()) return get<PageResult<Record<string, unknown>>>('/messages', { page: 1, pageSize: 100 }).then((page) => page.items.map(toHttpMessage));
-  return mockCopy(messagesSorted());
+export function fetchMessages(page = 1, pageSize = 20): Promise<PageResult<Message>> {
+  if (!isMockMode()) return get<PageResult<Record<string, unknown>> & { size?: number }>('/messages', { page, size: pageSize }).then((result) => ({ ...result, pageSize: result.pageSize ?? result.size ?? pageSize, items: result.items.map((item) => toMessage(item as never)) }));
+  const all = messagesSorted(); const items = all.slice((page - 1) * pageSize, page * pageSize);
+  return mockCopy({ items, page, pageSize, total: all.length, hasMore: page * pageSize < all.length });
 }
 
-function toHttpMessage(item: Record<string, unknown>): Message {
-  const event = String(item.eventType ?? item.event ?? 'SYSTEM') as Message['event'];
-  const type: Message['type'] = event.startsWith('REVIEW') ? 'REVIEW' : event === 'SYSTEM' ? 'SYSTEM' : 'TASK';
-  return { id: String(item.id), type, event, title: String(item.title ?? ''), body: String(item.body ?? ''), source: '教研室事务管理系统', time: String(item.createdAt ?? ''), read: Boolean(item.read), taskId: item.taskId ? String(item.taskId) : undefined, submissionId: item.submissionId ? String(item.submissionId) : undefined, targetType: item.submissionId ? 'SUBMISSION' : item.taskId ? 'TASK' : 'SYSTEM', targetId: item.submissionId ? String(item.submissionId) : item.taskId ? String(item.taskId) : undefined };
+export function fetchUnreadCount(): Promise<number> {
+  if (!isMockMode()) return get<{ count: number }>('/messages/unread-count').then((data) => data.count);
+  return mockCopy(db.messages.filter((message) => !message.read).length, 120);
 }
 
 /** 标记单条已读 */
@@ -31,7 +32,3 @@ export function markAllMessagesRead(): Promise<void> {
 }
 
 /** 未读数（供 TabBar 角标） */
-export function fetchUnreadCount(): Promise<number> {
-  if (!isMockMode()) return get<{ count: number }>('/messages/unread-count').then((data) => Number(data.count ?? 0));
-  return mockCopy(db.messages.filter((m) => !m.read).length, 120);
-}
