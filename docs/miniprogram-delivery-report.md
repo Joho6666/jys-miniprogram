@@ -11,11 +11,11 @@
 | 项目 | 状态 | 说明 |
 | --- | --- | --- |
 | 现有 UI 与 Mock 闭环 | 已存在 | 11 个页面，保留当前视觉设计 |
-| 环境变量与 HTTP 入口 | 已存在/待完善 | 已有可配置入口，统一 Adapter 仍在实施 |
-| 领域契约 | 实施中 | 正迁移到 Assignment、版本化 Submission、Review |
-| 登录与 Token 轮换 | 实施中 | 需要前后端联调证据 |
-| 真实文件与消息 | 实施中 | 需要权限与真机验证 |
-| 自动化测试 | 实施中 | 已建立纯逻辑测试基础，E2E 待补齐 |
+| 环境变量与 HTTP 入口 | 已完成基础 | API envelope、401 refresh lock、上传/下载入口已接入 |
+| 领域契约 | 已完成基础 | Assignment、版本化 Submission、Review 字段已统一 |
+| 登录与 Token 轮换 | 已完成基础 | 密码/微信 Mock/绑定/refresh/logout 路由已接入 |
+| 真实文件与消息 | 已完成基础 | 文件接口、消息分页/已读/未读数和审核通知已接入 |
+| 自动化测试 | 已完成基础 | Vitest 10 用例、后端 JUnit 1 用例通过，E2E 待补齐 |
 
 ## 验证结果
 
@@ -23,10 +23,10 @@
 
 | 验证 | 结果 |
 | --- | --- |
-| TypeScript 类型检查 | PENDING |
-| Vitest | PENDING |
-| H5 生产构建 | PENDING |
-| mp-weixin 生产构建 | PENDING |
+| TypeScript 类型检查 | PASS |
+| Vitest | PASS（2 个文件，10 个用例） |
+| H5 生产构建 | PASS（AppID 未配置/Sass 弃用警告） |
+| mp-weixin 生产构建 | PASS（AppID 未配置/Sass 弃用警告） |
 | Mock Golden Path | NOT_TESTED |
 | 真实后端 Golden Path | NOT_TESTED |
 | 微信模拟器/真机 | UNAVAILABLE（待 AppID 与人工环境） |
