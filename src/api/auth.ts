@@ -3,11 +3,11 @@ import type { AuthSession, BindAccountPayload, PasswordLoginPayload, User, Wecha
 import { findUser, MOCK_USERS } from '@/mock/users';
 import { isMockMode, post } from '@/services/http';
 import { mockCopy } from '@/services/request';
+import { toUser } from './mappers/user.mapper';
 
 function normalizeSession(data: Record<string, unknown>): AuthSession {
   const rawUser = (data.user ?? {}) as Record<string, unknown>;
-  const name = String(rawUser.name ?? rawUser.username ?? '教师');
-  const user: User = { id: String(rawUser.id ?? ''), name, title: String(rawUser.title ?? '教师'), college: String(rawUser.college ?? ''), office: String(rawUser.office ?? rawUser.departmentName ?? ''), avatarText: name.slice(0, 1), termTaskCount: Number(rawUser.termTaskCount ?? 0), username: rawUser.username ? String(rawUser.username) : undefined, employeeNo: rawUser.employeeNo ? String(rawUser.employeeNo) : undefined, departmentId: rawUser.departmentId ? String(rawUser.departmentId) : undefined };
+  const user: User = toUser(rawUser as never);
   return { accessToken: String(data.accessToken ?? ''), refreshToken: data.refreshToken ? String(data.refreshToken) : undefined, expiresIn: data.expiresIn ? Number(data.expiresIn) : undefined, tokenType: data.tokenType ? String(data.tokenType) : 'Bearer', bindingRequired: Boolean(data.bindingRequired), bindingToken: data.bindingToken ? String(data.bindingToken) : undefined, user };
 }
 function mockSession(user: User): AuthSession { return { accessToken: `mock-${user.id}`, refreshToken: `mock-refresh-${user.id}`, tokenType: 'Bearer', user }; }

@@ -9,7 +9,8 @@ import { deepCopy } from '@/mock/db';
  */
 
 /** 后端服务地址（HTTP/HTTPS） */
-export const API_BASE: string = (import.meta.env.VITE_API_BASE as string | undefined) ?? '';
+const configuredApiBase = ((import.meta.env.VITE_API_BASE as string | undefined) ?? '').replace(/\/+$/, '');
+export const API_BASE: string = configuredApiBase && !configuredApiBase.endsWith('/api/v1') ? `${configuredApiBase}/api/v1` : configuredApiBase;
 
 /** 是否处于本地 Mock 模式 */
 export const IS_MOCK: boolean = API_BASE === '' || import.meta.env.VITE_USE_MOCK === 'true';

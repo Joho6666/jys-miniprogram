@@ -13,6 +13,15 @@ export interface PickedFile {
   format: FileFormat;
 }
 
+export function validatePickedFiles(files: PickedFile[]): PickedFile[] {
+  return files.map((file) => {
+    const format = detectFormat(file.name);
+    if (!format) throw new Error(`不支持的文件格式：${file.name}`);
+    if (file.sizeKB > MAX_FILE_SIZE_KB) throw new Error(`文件超过 20MB：${file.name}`);
+    return { ...file, format };
+  });
+}
+
 interface RawFile {
   name: string;
   sizeKB: number;
@@ -85,18 +94,5 @@ function pickRaw(count: number): Promise<RawFile[]> {
 /** 校验格式与大小后返回可上传文件 */
 export async function pickFiles(count = 1): Promise<PickedFile[]> {
   const raw = await pickRaw(count);
-  const accepted: PickedFile[] = [];
-
-  for (const file of raw) {
-    const format = detectFormat(file.name);
-    if (!format) {
-      throw new Error(`不支持的文件格式：${file.name}`);
-    }
-    if (file.sizeKB > MAX_FILE_SIZE_KB) {
-      throw new Error(`文件超过 20MB：${file.name}`);
-    }
-    accepted.push({ ...file, format });
-  }
-
-  return accepted;
+  return validatePickedFiles(raw.map((file) => ({ ...file, format: detectFormat(file.name) ?? 'PDF' })));
 }

@@ -87,16 +87,16 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { onLoad, onUnload } from '@dcloudio/uni-app';
+import { onLoad, onUnload, onShow } from '@dcloudio/uni-app';
 import type { SubmittedFile, UploadItem } from '@/types';
 import { fetchSubmissionOfTask } from '@/api/submission';
 import { useTaskStore } from '@/stores/task';
 import { useSubmissionStore } from '@/stores/submission';
 import { pickFiles } from '@/services/picker';
 import { deadlineText, fullDateTime, nowText } from '@/services/format';
-import { usePageShare } from '@/services/share';
-
-usePageShare(() => ({ title: '教研室事务助手 · 教师端' }));
+import { uploadFile } from '@/api/file';
+import { isMockMode } from '@/services/http';
+import { previewRemoteFile } from '@/services/file-preview';
 
 const MAX_COUNT = 5;
 
@@ -117,14 +117,15 @@ const timers: Record<string, ReturnType<typeof setInterval>> = {};
 
 const task = computed(() => taskStore.detail);
 
-const existingItems = computed(() => items.value.filter((item) => item.id.startsWith('keep-')));
-const newItems = computed(() => items.value.filter((item) => !item.id.startsWith('keep-')));
+const existingItems = computed(() => items.value.filter((item) => item.serverFileId && !item.localPath));
+const newItems = computed(() => items.value.filter((item) => Boolean(item.localPath)));
 const existingCount = computed(() => existingItems.value.length);
 
 const canSubmit = computed(() => {
   if (!items.value.length) return false;
   return items.value.every((item) => item.state === 'SUCCESS');
 });
+onShow(() => uni.hideShareMenu({ hideShareItems: ['shareAppMessage', 'shareTimeline'] }));
 
 onLoad(async (query) => {
   const id = query && typeof query.taskId === 'string' ? query.taskId : '';
@@ -141,7 +142,9 @@ onLoad(async (query) => {
     reviewedAt.value = latest.reviewedAt ? fullDateTime(latest.reviewedAt) : '';
     nextVersion.value = latest.version + 1;
     items.value = latest.files.map((file) => ({
-      id: `keep-${file.id}`,
+      id: file.id,
+      serverFileId: file.id,
+      localPath: '',
       name: file.name,
       format: file.format,
       sizeKB: file.sizeKB,
@@ -158,6 +161,13 @@ onUnload(() => {
 });
 
 function startUpload(id: string): void {
+  const target = items.value.find((item) => item.id === id);
+  if (!target) return;
+  if (!isMockMode()) {
+    target.state = 'UPLOADING';
+    void uploadFile(target.localPath, (progress) => { target.progress = progress; }).then((uploaded) => { target.serverFileId = uploaded.id; target.progress = 100; target.state = 'SUCCESS'; }).catch((error) => { target.state = 'FAILED'; target.error = error instanceof Error ? error.message : '上传失败'; });
+    return;
+  }
   const timer = setInterval(() => {
     const target = items.value.find((item) => item.id === id);
     if (!target) {
@@ -185,6 +195,7 @@ async function chooseFiles(): Promise<void> {
       const id = `up-${Date.now()}-${items.value.length}`;
       items.value.push({
         id,
+        localPath: file.path,
         name: file.name,
         format: file.format,
         sizeKB: file.sizeKB,
@@ -212,6 +223,8 @@ async function onReplace(target: UploadItem): Promise<void> {
     current.name = file.name;
     current.sizeKB = file.sizeKB;
     current.path = file.path;
+    current.localPath = file.path;
+    current.serverFileId = undefined;
     current.format = file.format;
     current.progress = 0;
     current.state = 'PENDING';
@@ -244,10 +257,11 @@ function onRetry(target: UploadItem): void {
 }
 
 function onPreview(target: UploadItem): void {
-  uni.showToast({ title: `预览 ${target.name}（演示）`, icon: 'none' });
+  void previewRemoteFile(target.serverFileId ?? target.id, target.name);
 }
 
 function onSubmit(): void {
+  if (submissionStore.submitting) return;
   if (!items.value.length) {
     uni.showToast({ title: '请至少保留一个文件', icon: 'none' });
     return;
@@ -260,9 +274,10 @@ function onSubmit(): void {
 }
 
 async function doSubmit(): Promise<void> {
+  if (submissionStore.submitting) return;
   confirmVisible.value = false;
   const files: SubmittedFile[] = items.value.map((item) => ({
-    id: item.id,
+    id: item.serverFileId ?? item.id,
     name: item.name,
     format: item.format,
     sizeKB: item.sizeKB,

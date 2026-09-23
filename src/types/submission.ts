@@ -30,6 +30,7 @@ export interface FileMetadata {
   mimeType: string;
   extension: string;
   uploadedAt: string;
+  previewUrl?: string;
 }
 
 /** 单版本记录（时间线渲染用） */

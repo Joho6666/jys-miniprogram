@@ -119,6 +119,7 @@ import { fullDateTime, deadlineText } from '@/services/format';
 import { primaryActionOf, remainShortText, taskBadgeOf, urgencyOf } from '@/services/domain';
 import { runTaskPrimaryAction } from '@/services/navigation';
 import { usePageShare } from '@/services/share';
+import { previewRemoteFile } from '@/services/file-preview';
 
 /** 分享单条任务：标题用任务名，落地到详情页 */
 usePageShare(() => {
@@ -182,7 +183,7 @@ function onPrimary(): void {
 }
 
 function onDownload(attachment: TaskAttachment): void {
-  uni.showToast({ title: `已开始下载 ${attachment.name}`, icon: 'none' });
+  void previewRemoteFile(attachment.id, attachment.name);
 }
 
 function onCall(name: string): void {

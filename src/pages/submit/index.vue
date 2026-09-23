@@ -108,15 +108,15 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { onLoad, onUnload } from '@dcloudio/uni-app';
+import { onLoad, onUnload, onShow } from '@dcloudio/uni-app';
 import type { SubmittedFile, UploadItem } from '@/types';
 import { useTaskStore } from '@/stores/task';
 import { useSubmissionStore } from '@/stores/submission';
 import { pickFiles } from '@/services/picker';
 import { deadlineText, nowText } from '@/services/format';
-import { usePageShare } from '@/services/share';
-
-usePageShare(() => ({ title: '教研室事务助手 · 教师端' }));
+import { uploadFile } from '@/api/file';
+import { isMockMode } from '@/services/http';
+import { previewRemoteFile } from '@/services/file-preview';
 
 const MAX_COUNT = 5;
 
@@ -137,6 +137,7 @@ const canSubmit = computed(() => {
   if (!items.value.length) return false;
   return items.value.every((item) => item.state === 'SUCCESS');
 });
+onShow(() => uni.hideShareMenu({ hideShareItems: ['shareAppMessage', 'shareTimeline'] }));
 
 onLoad((query) => {
   const id = query && typeof query.taskId === 'string' ? query.taskId : '';
@@ -151,6 +152,13 @@ onUnload(() => {
 });
 
 function startUpload(id: string): void {
+  const target = items.value.find((item) => item.id === id);
+  if (!target) return;
+  if (!isMockMode()) {
+    target.state = 'UPLOADING';
+    void uploadFile(target.localPath, (progress) => { target.progress = progress; }).then((uploaded) => { target.serverFileId = uploaded.id; target.progress = 100; target.state = 'SUCCESS'; }).catch((error) => { target.state = 'FAILED'; target.error = error instanceof Error ? error.message : '上传失败'; });
+    return;
+  }
   const timer = setInterval(() => {
     const target = items.value.find((item) => item.id === id);
     if (!target) {
@@ -172,6 +180,7 @@ function addFile(name: string, sizeKB: number, path: string, format: UploadItem[
   items.value.push({
     id,
     name,
+    localPath: path,
     sizeKB,
     path,
     format,
@@ -207,6 +216,8 @@ async function onReplace(target: UploadItem): Promise<void> {
     current.name = file.name;
     current.sizeKB = file.sizeKB;
     current.path = file.path;
+    current.localPath = file.path;
+    current.serverFileId = undefined;
     current.format = file.format;
     current.progress = 0;
     current.state = 'PENDING';
@@ -239,7 +250,7 @@ function onRetry(target: UploadItem): void {
 }
 
 function onPreview(target: UploadItem): void {
-  uni.showToast({ title: `预览 ${target.name}（演示）`, icon: 'none' });
+  void previewRemoteFile(target.serverFileId ?? target.id, target.name);
 }
 
 function doClear(): void {
@@ -250,6 +261,7 @@ function doClear(): void {
 }
 
 function onSubmit(): void {
+  if (submissionStore.submitting) return;
   if (!items.value.length) {
     uni.showToast({ title: '请先选择要提交的材料', icon: 'none' });
     return;
@@ -262,9 +274,10 @@ function onSubmit(): void {
 }
 
 async function doSubmit(): Promise<void> {
+  if (submissionStore.submitting) return;
   confirmVisible.value = false;
   const files: SubmittedFile[] = items.value.map((item) => ({
-    id: item.id,
+    id: item.serverFileId ?? item.id,
     name: item.name,
     format: item.format,
     sizeKB: item.sizeKB,

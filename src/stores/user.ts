@@ -24,5 +24,7 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  return { current, loading, error, ready, load };
+  function reset(): void { current.value = null; error.value = ''; }
+
+  return { current, loading, error, ready, load, reset };
 });

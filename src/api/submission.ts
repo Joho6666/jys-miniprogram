@@ -14,6 +14,8 @@ import { buildVersionNodes } from '@/services/domain';
 import { mockCopy, mockFail, mockOk } from '@/services/request';
 import { apiRequest, get, post, isMockMode } from '@/services/http';
 import type { PageResult } from '@/types';
+import { toSubmissionView } from './mappers/submission.mapper';
+import { fetchTaskDetail } from './task';
 
 function submissionBizStatus(submission: Submission): BizStatus {
   if (submission.status === 'APPROVED') return 'APPROVED';
@@ -31,7 +33,7 @@ function toView(submission: Submission): SubmissionView {
 
 /** 我的提交记录（按提交时间倒序，同一时刻保持插入顺序） */
 export function fetchSubmissions(): Promise<SubmissionView[]> {
-  if (!isMockMode()) return get<PageResult<Record<string, unknown>>>('/submissions', { page: 1, pageSize: 100 }).then((page) => page.items.map(toHttpView));
+  if (!isMockMode()) return get<PageResult<Record<string, unknown>>>('/submissions', { page: 1, pageSize: 20 }).then((page) => page.items.map((item) => toSubmissionView(item as never)));
   const list = db.submissions
     .map((submission, index) => ({ submission, index }))
     .sort((a, b) => {
@@ -42,15 +44,9 @@ export function fetchSubmissions(): Promise<SubmissionView[]> {
   return mockCopy(list.map(toView));
 }
 
-function toHttpView(item: Record<string, unknown>): SubmissionView {
-  const status = String(item.status ?? 'PENDING_REVIEW') as Submission['status'];
-  const taskId = String(item.taskId ?? item.assignmentId ?? '');
-  const submission: Submission = { id: String(item.id), taskId, taskTitle: String(item.taskTitle ?? ''), assignmentId: item.assignmentId ? String(item.assignmentId) : undefined, version: Number(item.version ?? 1), status, files: [], note: String(item.note ?? ''), submittedAt: String(item.submittedAt ?? ''), reviewedAt: item.reviewedAt ? String(item.reviewedAt) : undefined, reviewOpinion: item.reviewOpinion ? String(item.reviewOpinion) : undefined, reviewerName: item.reviewerName ? String(item.reviewerName) : undefined };
-  return { ...submission, bizStatus: submissionBizStatus(submission), versions: [ { submissionId: submission.id, version: submission.version, status: submission.status, submittedAt: submission.submittedAt, reviewedAt: submission.reviewedAt, reviewerName: submission.reviewerName, opinion: submission.reviewOpinion, active: true } ] };
-}
-
 /** 某任务最新一次提交（不存在时返回 undefined） */
 export function fetchSubmissionOfTask(taskId: string): Promise<SubmissionView | undefined> {
+  if (!isMockMode()) return getTaskSubmission(taskId);
   const list = submissionsOfTask(taskId);
   if (!list.length) {
     return mockCopy(undefined);
@@ -58,9 +54,15 @@ export function fetchSubmissionOfTask(taskId: string): Promise<SubmissionView | 
   return mockCopy(toView(list[list.length - 1]));
 }
 
+async function getTaskSubmission(taskId: string): Promise<SubmissionView | undefined> {
+  const task = await fetchTaskDetail(taskId);
+  if (!task.latestSubmissionId) return undefined;
+  return fetchSubmissionDetail(task.latestSubmissionId);
+}
+
 /** 提交单详情（含版本时间线） */
 export function fetchSubmissionDetail(submissionId: string): Promise<SubmissionView> {
-  if (!isMockMode()) return get<Record<string, unknown>>(`/submissions/${submissionId}`).then(toHttpView);
+  if (!isMockMode()) return get<Record<string, unknown>>(`/submissions/${submissionId}`).then((dto) => toSubmissionView(dto as never, ((dto.versions as Array<Record<string, unknown>> | undefined) ?? []).map((v) => v as never)));
   const submission = findSubmission(submissionId);
   if (!submission) {
     return mockFail('提交记录不存在');
@@ -69,8 +71,8 @@ export function fetchSubmissionDetail(submissionId: string): Promise<SubmissionV
 }
 
 /** 首次提交材料 */
-export function submitMaterials(payload: SubmitPayload): Promise<Submission> {
-  if (!isMockMode()) return post<Record<string, unknown>>(`/tasks/${payload.taskId}/submissions`, { fileIds: payload.files.map((file) => file.id), note: payload.note }).then((s) => ({ id: String(s.id), taskId: payload.taskId, taskTitle: '', assignmentId: s.assignmentId ? String(s.assignmentId) : undefined, version: Number(s.version ?? 1), status: String(s.status ?? 'PENDING_REVIEW') as Submission['status'], files: payload.files, note: String(s.note ?? payload.note), submittedAt: String(s.submittedAt ?? new Date().toISOString()) }));
+export function submitMaterials(payload: SubmitPayload & { assignmentId?: string }): Promise<Submission> {
+  if (!isMockMode()) return post<Record<string, unknown>>(`/tasks/${payload.taskId}/submissions`, { assignmentId: payload.assignmentId, fileIds: payload.files.map((file) => file.id), note: payload.note }).then((s) => ({ id: String(s.id), taskId: payload.taskId, taskTitle: '', assignmentId: s.assignmentId ? String(s.assignmentId) : payload.assignmentId, version: Number(s.version ?? 1), status: String(s.status ?? 'PENDING_REVIEW') as Submission['status'], files: payload.files, note: String(s.note ?? payload.note), submittedAt: String(s.submittedAt ?? new Date().toISOString()) }));
   try {
     return mockCopy(handleSubmit(payload));
   } catch (error) {
@@ -79,7 +81,7 @@ export function submitMaterials(payload: SubmitPayload): Promise<Submission> {
 }
 
 /** 驳回后重新提交（版本自动 +1） */
-export function resubmitMaterials(payload: SubmitPayload): Promise<Submission> {
+export function resubmitMaterials(payload: SubmitPayload & { assignmentId?: string }): Promise<Submission> {
   if (!isMockMode()) return submitMaterials(payload);
   try {
     return mockCopy(handleResubmit(payload));

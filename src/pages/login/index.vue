@@ -29,12 +29,14 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { onShow } from '@dcloudio/uni-app';
 import { useAuthStore } from '@/stores/auth';
 import { useUserStore } from '@/stores/user';
 import { isDemoMode } from '@/services/http';
 const auth = useAuthStore(); const userStore = useUserStore(); const step = ref<'login' | 'bind'>('login');
 const username = ref(''); const password = ref(''); const employeeNo = ref(''); const name = ref(''); const demoMode = isDemoMode();
-async function finish(): Promise<void> { await userStore.load(true); uni.reLaunch({ url: '/pages/home/index' }); }
+onShow(() => uni.hideShareMenu({ hideShareItems: ['shareAppMessage', 'shareTimeline'] }));
+async function finish(): Promise<void> { await userStore.load(true); if (userStore.current?.enabled === false) { const { clearTokens } = await import('@/services/request'); clearTokens(); userStore.reset(); uni.showModal({ title: '账号已停用', content: '请联系管理员', showCancel: false }); return; } uni.reLaunch({ url: '/pages/home/index' }); }
 async function passwordLogin(): Promise<void> { if (!username.value.trim() || !password.value) return void uni.showToast({ title: '请填写账号和密码', icon: 'none' }); try { await auth.login({ username: username.value.trim(), password: password.value }); if (auth.bindingToken) step.value = 'bind'; else await finish(); } catch (_) { /* store presents error */ } }
 async function wechatLogin(): Promise<void> { try { const result = await new Promise<UniApp.LoginRes>((resolve, reject) => uni.login({ provider: 'weixin', success: resolve, fail: reject })); await auth.loginWechat({ code: result.code }); if (auth.bindingToken) step.value = 'bind'; else await finish(); } catch (_) { /* store presents error */ } }
 async function bindAccount(): Promise<void> { if (!employeeNo.value.trim() || !name.value.trim()) return void uni.showToast({ title: '请填写工号和姓名', icon: 'none' }); try { await auth.bind({ employeeNo: employeeNo.value.trim(), name: name.value.trim() }); await finish(); } catch (_) { /* store presents error */ } }

@@ -30,7 +30,7 @@
           :format="file.format"
           :size-kb="file.sizeKB"
           :sub="`上传于 ${fullDateTime(file.uploadedAt)}`"
-          @tap="onPreview(file.name)"
+          @tap="onPreview(file.name, file.id)"
         />
       </view>
 
@@ -95,22 +95,12 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { onLoad } from '@dcloudio/uni-app';
+import { onLoad, onShow } from '@dcloudio/uni-app';
 import { useSubmissionStore } from '@/stores/submission';
 import { fullDateTime } from '@/services/format';
-import { usePageShare } from '@/services/share';
+import { previewRemoteFile } from '@/services/file-preview';
 
-/** 分享提交详情：标题带任务名与版本，落地到当前提交 */
-usePageShare(() => {
-  const s = submission.value;
-  if (!s) {
-    return { title: '教研室事务助手 · 教师端' };
-  }
-  return {
-    title: `${s.taskTitle}（V${s.version}）提交详情`,
-    path: `/pages/submission-detail/index?submissionId=${s.id}`,
-  };
-});
+onShow(() => uni.hideShareMenu({ hideShareItems: ['shareAppMessage', 'shareTimeline'] }));
 
 const submissionStore = useSubmissionStore();
 
@@ -136,8 +126,8 @@ function reload(): void {
   }
 }
 
-function onPreview(name: string): void {
-  uni.showToast({ title: `预览 ${name}（演示）`, icon: 'none' });
+function onPreview(name: string, fileId: string): void {
+  void previewRemoteFile(fileId, name);
 }
 
 async function doReview(approved: boolean): Promise<void> {

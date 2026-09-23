@@ -7,6 +7,8 @@ export type UploadState = 'PENDING' | 'UPLOADING' | 'SUCCESS' | 'FAILED';
 export interface UploadItem {
   id: string;
   name: string;
+  localPath: string;
+  serverFileId?: string;
   format: FileFormat;
   sizeKB: number;
   /** 本地临时路径（H5 为 blob 地址） */

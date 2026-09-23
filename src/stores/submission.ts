@@ -10,6 +10,7 @@ import {
 } from '@/api/submission';
 import { useMessageStore } from './message';
 import { useTaskStore } from './task';
+import { useDashboardStore } from './dashboard';
 
 /** 我的提交记录状态筛选 */
 export type SubmissionFilterKey = 'ALL' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
@@ -76,7 +77,8 @@ export const useSubmissionStore = defineStore('submission', () => {
   async function submit(taskId: string, files: SubmittedFile[], note: string): Promise<string> {
     submitting.value = true;
     try {
-      const submission = await submitMaterials({ taskId, files, note });
+      const task = useTaskStore().detail;
+      const submission = await submitMaterials({ taskId, assignmentId: task?.assignmentId ?? task?.assignment?.id, files, note });
       await refreshRelated(taskId);
       return submission.id;
     } finally {
@@ -88,7 +90,8 @@ export const useSubmissionStore = defineStore('submission', () => {
   async function resubmit(taskId: string, files: SubmittedFile[], note: string): Promise<string> {
     submitting.value = true;
     try {
-      const submission = await resubmitMaterials({ taskId, files, note });
+      const task = useTaskStore().detail;
+      const submission = await resubmitMaterials({ taskId, assignmentId: task?.assignmentId ?? task?.assignment?.id, files, note });
       await refreshRelated(taskId);
       return submission.id;
     } finally {
@@ -106,7 +109,8 @@ export const useSubmissionStore = defineStore('submission', () => {
   async function refreshRelated(taskId: string): Promise<void> {
     const taskStore = useTaskStore();
     const messageStore = useMessageStore();
-    await Promise.all([taskStore.loadTasks(true), loadSubmissions(true), messageStore.loadMessages(true)]);
+    const dashboardStore = useDashboardStore();
+    await Promise.all([taskStore.loadTasks(true), loadSubmissions(true), messageStore.loadMessages(true), dashboardStore.load(true)]);
     if (taskStore.detail && taskStore.detail.id === taskId) {
       await taskStore.loadDetail(taskId);
     }
@@ -114,6 +118,8 @@ export const useSubmissionStore = defineStore('submission', () => {
       await loadDetail(detail.value.id);
     }
   }
+
+  function reset(): void { submissions.value = []; detail.value = null; filter.value = 'ALL'; error.value = ''; submitting.value = false; }
 
   return {
     submissions,
@@ -131,5 +137,6 @@ export const useSubmissionStore = defineStore('submission', () => {
     submit,
     resubmit,
     review,
+    reset,
   };
 });
