@@ -2,9 +2,9 @@ import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 import type { TaskFilterKey, TaskView } from '@/types';
 import { fetchTaskDetail, fetchTasks } from '@/api/task';
-import { urgencyOf } from '@/services/domain';
+import { isMockMode } from '@/services/http';
 
-/** 「我的待办」标签页（设计规范：全部 / 紧急 / 即将截止 / 待审核 / 已驳回 / 已完成） */
+/** 「我的待办」标签页 */
 export const TASK_FILTERS: Array<{ key: TaskFilterKey; label: string }> = [
   { key: 'ALL', label: '全部' },
   { key: 'DUE_SOON', label: '即将截止' },
@@ -21,8 +21,7 @@ const CLOSED: string[] = ['COMPLETED', 'APPROVED'];
 
 const FILTER_PREDICATES: Record<TaskFilterKey, (task: TaskView) => boolean> = {
   ALL: () => true,
-  URGENT: (t) => ACTIONABLE.includes(t.bizStatus) && urgencyOf(t.deadline) === 'URGENT',
-  DUE_SOON: (t) => ACTIONABLE.includes(t.bizStatus) && urgencyOf(t.deadline) === 'SOON',
+  DUE_SOON: (t) => t.bizStatus === 'DUE_SOON',
   OVERDUE: (t) => t.bizStatus === 'OVERDUE',
   PENDING_REVIEW: (t) => t.bizStatus === 'PENDING_REVIEW',
   REJECTED: (t) => t.bizStatus === 'REJECTED',
@@ -42,9 +41,11 @@ export const useTaskStore = defineStore('task', () => {
 
   const filter = ref<TaskFilterKey>('ALL');
   const keyword = ref('');
+  let searchTimer: ReturnType<typeof setTimeout> | undefined; let requestSeq = 0;
 
   /** 列表（筛选 + 搜索）：待办优先、按紧急度排序；已完成沉底、按最近截止排序 */
   const filtered = computed(() => {
+    if (!isMockMode()) return tasks.value;
     const predicate = FILTER_PREDICATES[filter.value];
     const kw = keyword.value.trim();
     return tasks.value
@@ -68,6 +69,7 @@ export const useTaskStore = defineStore('task', () => {
   /** 各标签页计数（角标用） */
   const filterCounts = computed(() => {
     const counts = {} as Record<TaskFilterKey, number>;
+    if (!isMockMode()) { TASK_FILTERS.forEach((item) => { counts[item.key] = 0; }); return counts; }
     TASK_FILTERS.forEach((item) => {
       counts[item.key] = tasks.value.filter((t) => FILTER_PREDICATES[item.key](t)).length;
     });
@@ -102,23 +104,26 @@ export const useTaskStore = defineStore('task', () => {
 
   async function loadTasks(force = false): Promise<void> {
     if (tasks.value.length && !force) return;
+    const seq = ++requestSeq;
     page.value = 1; hasMore.value = true;
     loading.value = true;
     error.value = '';
     try {
-      const next = await fetchTasks({ page: 1, size: pageSize.value, keyword: keyword.value });
-      tasks.value = next; hasMore.value = next.length >= pageSize.value;
+      const next = await fetchTasks({ page: 1, size: pageSize.value, keyword: keyword.value, status: filter.value === 'ALL' ? undefined : filter.value });
+      if (seq !== requestSeq) return;
+      tasks.value = next.items; page.value = next.page; hasMore.value = next.hasMore;
     } catch (e) {
-      error.value = e instanceof Error ? e.message : '任务加载失败';
+      if (seq === requestSeq) error.value = e instanceof Error ? e.message : '任务加载失败';
     } finally {
-      loading.value = false;
+      if (seq === requestSeq) loading.value = false;
     }
   }
 
   async function loadMore(): Promise<void> {
     if (loadingMore.value || !hasMore.value) return;
+    const seq = requestSeq;
     loadingMore.value = true;
-    try { const nextPage = page.value + 1; const next = await fetchTasks({ page: nextPage, size: pageSize.value, keyword: keyword.value }); tasks.value = [...tasks.value, ...next]; page.value = nextPage; hasMore.value = next.length >= pageSize.value; } catch (e) { error.value = e instanceof Error ? e.message : '加载更多失败'; } finally { loadingMore.value = false; }
+    try { const nextPage = page.value + 1; const next = await fetchTasks({ page: nextPage, size: pageSize.value, keyword: keyword.value, status: filter.value === 'ALL' ? undefined : filter.value }); if (seq !== requestSeq) return; tasks.value = [...tasks.value, ...next.items]; page.value = next.page; hasMore.value = next.hasMore; error.value = ''; } catch (e) { if (seq === requestSeq) error.value = e instanceof Error ? e.message : '加载更多失败'; } finally { if (seq === requestSeq) loadingMore.value = false; }
   }
 
   async function loadDetail(taskId: string): Promise<void> {
@@ -138,17 +143,25 @@ export const useTaskStore = defineStore('task', () => {
     return tasks.value.find((t) => t.id === taskId);
   }
 
-  function setFilter(next: TaskFilterKey): void {
+  async function setFilter(next: TaskFilterKey): Promise<void> {
+    if (filter.value === next) return;
+    requestSeq += 1; loadingMore.value = false;
     filter.value = next;
+    tasks.value = []; page.value = 1; hasMore.value = true; await loadTasks(true);
   }
 
-  function setKeyword(next: string): void {
+  async function setKeyword(next: string): Promise<void> {
+    requestSeq += 1; loadingMore.value = false;
     keyword.value = next;
+    tasks.value = []; page.value = 1; hasMore.value = true; if (searchTimer) clearTimeout(searchTimer); searchTimer = setTimeout(() => { void loadTasks(true); }, isMockMode() ? 0 : 300);
   }
 
-  function clearKeyword(): void {
-    keyword.value = '';
+  async function clearKeyword(): Promise<void> {
+    if (searchTimer) clearTimeout(searchTimer);
+    await setKeyword('');
   }
+
+  function reset(): void { requestSeq += 1; tasks.value = []; detail.value = null; filter.value = 'ALL'; keyword.value = ''; page.value = 1; hasMore.value = true; loadingMore.value = false; error.value = ''; if (searchTimer) clearTimeout(searchTimer); }
 
   return {
     tasks,
@@ -175,5 +188,6 @@ export const useTaskStore = defineStore('task', () => {
     setFilter,
     setKeyword,
     clearKeyword,
+    reset,
   };
 });

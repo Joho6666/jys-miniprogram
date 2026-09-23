@@ -93,7 +93,6 @@ export interface TaskView extends Task {
 /** 任务列表筛选键（与「我的待办」标签页一一对应） */
 export type TaskFilterKey =
   | 'ALL'
-  | 'URGENT'
   | 'DUE_SOON'
   | 'OVERDUE'
   | 'PENDING_REVIEW'

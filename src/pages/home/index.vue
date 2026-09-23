@@ -27,7 +27,7 @@
       </view>
       <view class="stats__row">
         <stat-card label="已完成" :value="stats.completed" tone="success" icon="checkmarkempty" @tap="goTasks('COMPLETED')" />
-        <stat-card label="逾期任务" :value="stats.overdue" tone="danger" icon="info" @tap="goTasks('URGENT')" />
+        <stat-card label="逾期任务" :value="stats.overdue" tone="danger" icon="info" @tap="goTasks('OVERDUE')" />
       </view>
     </view>
 
@@ -97,12 +97,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import type { IconTone, Message, TaskView } from '@/types';
 import { useMessageStore } from '@/stores/message';
-import { useTaskStore } from '@/stores/task';
 import { useUserStore } from '@/stores/user';
+import { useDashboardStore } from '@/stores/dashboard';
+import { isMockMode } from '@/services/http';
+import { fetchTasks } from '@/api/task';
 import { greeting, relativeTime, todayText } from '@/services/format';
 import { usePageShare } from '@/services/share';
 
@@ -127,17 +129,17 @@ const ENTRIES: EntryItem[] = [
 
 const MESSAGE_ENTRY = ENTRIES[2];
 
-const taskStore = useTaskStore();
 const messageStore = useMessageStore();
 const userStore = useUserStore();
+const dashboard = useDashboardStore();
 
-const stats = computed(() => taskStore.stats);
-const urgentTasks = computed(() => taskStore.urgentTasks.slice(0, 2));
-const rejectedTask = computed(() => taskStore.rejectedTasks[0]);
-const rejectedCount = computed(() => taskStore.rejectedTasks.length);
-const activities = computed(() => messageStore.recentActivities);
+const stats = computed(() => ({ todo: dashboard.data.todoCount, dueSoon: dashboard.data.dueSoonCount, pendingReview: dashboard.data.pendingReviewCount, completed: dashboard.data.completedCount, rejected: dashboard.data.rejectedCount, overdue: dashboard.data.overdueCount }));
+const urgentTasks = computed(() => dashboard.data.urgentTasks.slice(0, 2));
+const rejectedTask = ref<TaskView | null>(null);
+const rejectedCount = computed(() => dashboard.data.rejectedCount);
+const activities = computed(() => dashboard.data.recentActivities.length ? dashboard.data.recentActivities : messageStore.recentActivities);
 
-const displayName = computed(() => userStore.current?.name ?? '张老师');
+const displayName = computed(() => userStore.current?.name ?? (isMockMode() ? '张老师' : ''));
 const greetingText = computed(() => greeting());
 const dateText = computed(() => todayText());
 const todoHint = computed(() =>
@@ -145,7 +147,8 @@ const todoHint = computed(() =>
 );
 
 onShow(async () => {
-  await Promise.all([userStore.load(), taskStore.loadTasks(), messageStore.loadMessages()]);
+  const results = await Promise.all([userStore.load(), dashboard.load(), messageStore.loadMessages(), fetchTasks({ page: 1, size: 1, status: 'REJECTED' })]);
+  rejectedTask.value = results[3].items[0] ?? null;
 });
 
 function goTasks(filter: string): void {
