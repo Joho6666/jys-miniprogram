@@ -112,18 +112,34 @@ withDefaults(defineProps<Props>(), {
 
 /* ---------- 变体尺寸 ---------- */
 .campus--hero {
-  opacity: 0.9;
+  opacity: 1;
 }
 
+/* 中间主楼高、两侧配楼矮，形成天际线层次而非等高方块 */
 .campus--hero .campus__building--side {
-  width: 104rpx;
-  height: 118rpx;
+  width: 108rpx;
+  height: 96rpx;
+}
+
+.campus--hero .campus__building--side.campus__building--right {
+  height: 112rpx;
 }
 
 .campus--hero .campus__building--main {
-  width: 150rpx;
-  height: 168rpx;
-  margin: 0 16rpx;
+  width: 168rpx;
+  height: 170rpx;
+  margin: 0 24rpx;
+}
+
+.campus--hero .campus__window {
+  width: 10rpx;
+  height: 10rpx;
+  margin: 6rpx;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.campus--hero .campus__building--main .campus__window {
+  background: rgba(255, 255, 255, 0.6);
 }
 
 .campus--card {

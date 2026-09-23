@@ -12,7 +12,7 @@
           <text class="hero__brand-tag">教师端</text>
         </view>
         <text class="hero__greeting">{{ greetingText }}，{{ displayName }}！</text>
-        <text class="hero__sub">今天是{{ dateText }}，{{ todoHint }}</text>
+        <text class="hero__sub">{{ dateText }} · {{ todoHint }}</text>
       </view>
       <view class="hero__art">
         <campus-art variant="hero" tone="light" />
@@ -143,7 +143,7 @@ const displayName = computed(() => userStore.current?.name ?? (isMockMode() ? '�
 const greetingText = computed(() => greeting());
 const dateText = computed(() => todayText());
 const todoHint = computed(() =>
-  stats.value.todo > 0 ? `有 ${stats.value.todo} 项事务待处理，继续加油！` : '暂无待办事务，一切顺利！',
+  stats.value.todo > 0 ? `有 ${stats.value.todo} 项事务待处理` : '暂无待办事务',
 );
 
 onShow(async () => {
@@ -201,7 +201,8 @@ function goMessage(message: Message): void {
   position: relative;
   overflow: hidden;
   background: $primary;
-  padding-bottom: 108rpx;
+  /* 底部留出剪影带的高度，文案与剪影互不重叠 */
+  padding-bottom: 196rpx;
 }
 
 .hero__overlay {
@@ -277,12 +278,13 @@ function goMessage(message: Message): void {
   color: rgba(255, 255, 255, 0.86);
 }
 
+/* 剪影贴在品牌区底边，占满整条底带（与设计稿的校园底图构图一致） */
 .hero__art {
   position: absolute;
-  right: 20rpx;
-  bottom: 96rpx;
+  right: 24rpx;
+  bottom: -6rpx;
   z-index: 1;
-  opacity: 0.9;
+  opacity: 0.95;
 }
 
 /* ---------- 统计 ---------- */
@@ -290,7 +292,7 @@ function goMessage(message: Message): void {
   position: relative;
   z-index: 3;
   padding: 0 32rpx;
-  margin-top: -76rpx;
+  margin-top: 24rpx;
 }
 
 .stats__row {

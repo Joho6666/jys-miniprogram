@@ -144,7 +144,8 @@ async function doLogout(): Promise<void> {
   position: relative;
   overflow: hidden;
   background: $primary;
-  padding-bottom: 84rpx;
+  /* 底部留出剪影带，头像与姓名区域不被遮挡 */
+  padding-bottom: 192rpx;
 }
 
 .hero__overlay {
@@ -203,8 +204,8 @@ async function doLogout(): Promise<void> {
 
 .hero__art {
   position: absolute;
-  right: -16rpx;
-  bottom: -8rpx;
+  right: 24rpx;
+  bottom: -6rpx;
   z-index: 1;
 }
 
