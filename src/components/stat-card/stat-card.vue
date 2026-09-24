@@ -39,10 +39,10 @@ function onTap(): void {
 
 <style lang="scss" scoped>
 .stat-card {
-  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
   @include flex-row();
   min-height: 132rpx;
-  box-sizing: border-box;
   padding: 22rpx 20rpx;
   border: 1rpx solid $border;
   border-top-width: 5rpx;

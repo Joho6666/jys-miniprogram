@@ -22,12 +22,12 @@
     <!-- 2×2 统计 -->
     <view class="stats">
       <view class="stats__row">
-        <stat-card label="我的待办" :value="stats.todo" tone="primary" icon="list" @tap="goTasks('ALL')" />
-        <stat-card label="即将截止" :value="stats.dueSoon" tone="warning" icon="calendar" @tap="goTasks('DUE_SOON')" />
+        <view class="stats__cell"><stat-card label="我的待办" :value="stats.todo" tone="primary" icon="list" @tap="goTasks('ALL')" /></view>
+        <view class="stats__cell"><stat-card label="即将截止" :value="stats.dueSoon" tone="warning" icon="calendar" @tap="goTasks('DUE_SOON')" /></view>
       </view>
       <view class="stats__row">
-        <stat-card label="已完成" :value="stats.completed" tone="success" icon="checkmarkempty" @tap="goTasks('COMPLETED')" />
-        <stat-card label="逾期任务" :value="stats.overdue" tone="danger" icon="info" @tap="goTasks('OVERDUE')" />
+        <view class="stats__cell"><stat-card label="已完成" :value="stats.completed" tone="success" icon="checkmarkempty" @tap="goTasks('COMPLETED')" /></view>
+        <view class="stats__cell"><stat-card label="逾期任务" :value="stats.overdue" tone="danger" icon="info" @tap="goTasks('OVERDUE')" /></view>
       </view>
     </view>
 
@@ -312,7 +312,12 @@ function goMessage(message: Message): void {
   margin-bottom: 12rpx;
 }
 
-.stats__row .stat-card + .stat-card {
+.stats__cell {
+  flex: 1;
+  min-width: 0;
+}
+
+.stats__cell + .stats__cell {
   margin-left: 12rpx;
 }
 
