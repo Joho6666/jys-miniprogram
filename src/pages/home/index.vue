@@ -204,7 +204,7 @@ function goMessage(message: Message): void {
     radial-gradient(circle at 82% 20%, rgba(255, 255, 255, 0.82), transparent 25%),
     linear-gradient(145deg, #f1f9ff 0%, #dcefff 58%, #edf7ff 100%);
   /* 底部留出剪影带的高度，文案与剪影互不重叠 */
-  padding-bottom: 196rpx;
+  padding-bottom: 232rpx;
 }
 
 .hero__overlay {
@@ -243,6 +243,7 @@ function goMessage(message: Message): void {
   position: relative;
   z-index: 2;
   padding: 8rpx 32rpx 0;
+  max-width: 620rpx;
 }
 
 .hero__brand {
@@ -313,11 +314,11 @@ function goMessage(message: Message): void {
 /* 剪影贴在品牌区底边，占满整条底带（与设计稿的校园底图构图一致） */
 .hero__art {
   position: absolute;
-  right: 24rpx;
-  bottom: -6rpx;
+  right: -8rpx;
+  bottom: -10rpx;
   z-index: 1;
-  opacity: 0.84;
-  transform: scale(1.06);
+  opacity: 0.9;
+  transform: scale(1.2);
   transform-origin: right bottom;
 }
 
@@ -364,13 +365,13 @@ function goMessage(message: Message): void {
 /* ---------- 驳回提醒 ---------- */
 .alert {
   @include flex-row();
-  margin: 28rpx 32rpx 0;
-  padding: 22rpx 24rpx;
+  margin: 30rpx 32rpx 0;
+  padding: 26rpx 24rpx;
   border: 1rpx solid $danger-border;
   border-left-width: 6rpx;
   background: $danger-bg;
-  border-radius: 18rpx;
-  box-shadow: 0 8rpx 20rpx rgba(255, 77, 79, 0.06);
+  border-radius: 24rpx;
+  box-shadow: 0 12rpx 28rpx rgba(255, 77, 79, 0.09);
 }
 
 .alert--hover {
@@ -385,8 +386,8 @@ function goMessage(message: Message): void {
 
 .alert__title {
   display: block;
-  font-size: $font-body;
-  font-weight: 500;
+  font-size: 30rpx;
+  font-weight: 700;
   color: $danger;
 }
 
@@ -399,7 +400,11 @@ function goMessage(message: Message): void {
 }
 
 .alert__action {
+  padding: 10rpx 16rpx;
+  border-radius: 22rpx;
+  background: $surface;
   font-size: $font-tag;
+  font-weight: 600;
   color: $danger;
   margin-left: 16rpx;
   flex-shrink: 0;

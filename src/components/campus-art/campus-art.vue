@@ -82,11 +82,12 @@ withDefaults(defineProps<Props>(), {
 
 /* ---------- 浅色底（卡片 / 页脚） ---------- */
 .campus--soft .campus__building {
-  background: $primary-light;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.78), rgba(22, 119, 255, 0.16));
+  border: 1rpx solid rgba(255, 255, 255, 0.62);
 }
 
 .campus--soft .campus__roof {
-  background: $primary-light;
+  background: rgba(22, 119, 255, 0.18);
 }
 
 .campus--soft .campus__window {

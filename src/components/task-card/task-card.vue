@@ -64,11 +64,11 @@ function onTap(): void {
   position: relative;
   overflow: hidden;
   background: $surface;
-  border: 1rpx solid $border;
-  border-radius: 20rpx;
-  padding: 26rpx 28rpx 22rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 8rpx 24rpx rgba(29, 33, 41, 0.045);
+  border: 1rpx solid rgba(229, 231, 235, 0.72);
+  border-radius: 24rpx;
+  padding: 28rpx 28rpx 24rpx;
+  margin-bottom: 22rpx;
+  box-shadow: 0 10rpx 30rpx rgba(29, 33, 41, 0.055);
   transition: transform 160ms ease, box-shadow 160ms ease;
 }
 
@@ -97,8 +97,8 @@ function onTap(): void {
 
 .task-card__title {
   display: block;
-  margin-top: 16rpx;
-  font-size: $font-md;
+  margin-top: 18rpx;
+  font-size: 30rpx;
   font-weight: 600;
   color: $text-1;
   line-height: 1.45;
@@ -139,8 +139,8 @@ function onTap(): void {
 
 .task-card__foot {
   @include flex-row(space-between);
-  margin-top: 20rpx;
-  padding-top: 18rpx;
+  margin-top: 22rpx;
+  padding-top: 20rpx;
   border-top: 1rpx solid $border;
 }
 
