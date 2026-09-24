@@ -13,7 +13,7 @@ import { computed } from 'vue';
 import type { IconTone } from '@/types';
 import { ICON_TONE_META } from '@/types';
 
-/** 统计卡（首页 2×2 数据区）：实心图标 + 数值 + 标签，卡片底色取图标色调的浅色 */
+/** 统计卡：首页四列数据区，保持图标、数值和标签的垂直节奏 */
 interface Props {
   label: string;
   value: number | string;
@@ -29,7 +29,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{ (e: 'tap'): void }>();
 
-const cardBg = computed(() => '#FFFFFF');
+const cardBg = computed(() => ICON_TONE_META[props.tone].bg);
 const accentColor = computed(() => ICON_TONE_META[props.tone].color);
 
 function onTap(): void {
@@ -41,13 +41,16 @@ function onTap(): void {
 .stat-card {
   width: 100%;
   box-sizing: border-box;
-  @include flex-row();
-  min-height: 132rpx;
-  padding: 22rpx 20rpx;
-  border: 1rpx solid $border;
-  border-top-width: 5rpx;
-  border-radius: 18rpx;
-  box-shadow: 0 6rpx 18rpx rgba(29, 33, 41, 0.035);
+  min-height: 174rpx;
+  padding: 18rpx 14rpx 16rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  border: 1rpx solid rgba(255, 255, 255, 0.9);
+  border-top: 5rpx solid;
+  border-radius: 16rpx;
+  box-shadow: 0 7rpx 18rpx rgba(29, 33, 41, 0.055);
   transition: transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
 }
 
@@ -58,14 +61,14 @@ function onTap(): void {
 }
 
 .stat-card__main {
-  flex: 1;
-  margin-left: 16rpx;
+  width: 100%;
   min-width: 0;
+  margin-top: 12rpx;
 }
 
 .stat-card__value {
   display: block;
-  font-size: 44rpx;
+  font-size: 42rpx;
   font-weight: 700;
   letter-spacing: -1rpx;
   line-height: 1.1;
@@ -74,8 +77,8 @@ function onTap(): void {
 
 .stat-card__label {
   display: block;
-  margin-top: 6rpx;
-  font-size: $font-tag;
+  margin-top: 8rpx;
+  font-size: 22rpx;
   color: $text-2;
   @include ellipsis(1);
 }

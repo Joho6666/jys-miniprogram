@@ -5,27 +5,31 @@
       <view class="hero__overlay" />
       <view class="hero__circle hero__circle--lg" />
       <view class="hero__circle hero__circle--sm" />
-      <app-nav-bar title="" :show-back="false" transparent theme="light" />
+      <app-nav-bar title="" :show-back="false" transparent theme="dark" />
       <view class="hero__body">
         <view class="hero__brand">
           <text class="hero__brand-name">教研室事务助手</text>
           <text class="hero__brand-tag">教师端</text>
         </view>
-        <text class="hero__greeting">{{ greetingText }}，{{ displayName }}！</text>
-        <text class="hero__sub">{{ dateText }} · {{ todoHint }}</text>
+        <text class="hero__brand-sub">高效处理教研事务 · 助力教学发展</text>
+        <view class="hero__greeting">
+          <text>{{ greetingText }}，</text><text class="hero__name">{{ displayName }}</text><text>！</text>
+        </view>
+        <text class="hero__date">{{ dateText }}</text>
+        <view class="hero__sub">
+          <text>今天有 </text><text class="hero__count">{{ stats.todo }}</text><text> 项事务待处理，继续加油！</text>
+        </view>
       </view>
       <view class="hero__art">
-        <campus-art variant="hero" tone="light" />
+        <campus-art variant="hero" tone="soft" />
       </view>
     </view>
 
-    <!-- 2×2 统计 -->
+    <!-- 四列统计 -->
     <view class="stats">
       <view class="stats__row">
         <view class="stats__cell"><stat-card label="我的待办" :value="stats.todo" tone="primary" icon="list" @tap="goTasks('ALL')" /></view>
         <view class="stats__cell"><stat-card label="即将截止" :value="stats.dueSoon" tone="warning" icon="calendar" @tap="goTasks('DUE_SOON')" /></view>
-      </view>
-      <view class="stats__row">
         <view class="stats__cell"><stat-card label="已完成" :value="stats.completed" tone="success" icon="checkmarkempty" @tap="goTasks('COMPLETED')" /></view>
         <view class="stats__cell"><stat-card label="逾期任务" :value="stats.overdue" tone="danger" icon="info" @tap="goTasks('OVERDUE')" /></view>
       </view>
@@ -142,10 +146,6 @@ const activities = computed(() => dashboard.data.recentActivities.length ? dashb
 const displayName = computed(() => userStore.current?.name ?? (isMockMode() ? '张老师' : ''));
 const greetingText = computed(() => greeting());
 const dateText = computed(() => todayText());
-const todoHint = computed(() =>
-  stats.value.todo > 0 ? `有 ${stats.value.todo} 项事务待处理` : '暂无待办事务',
-);
-
 onShow(async () => {
   const results = await Promise.all([userStore.load(), dashboard.load(), messageStore.loadMessages(), fetchTasks({ page: 1, size: 1, status: 'REJECTED' })]);
   rejectedTask.value = results[3].items[0] ?? null;
@@ -200,7 +200,9 @@ function goMessage(message: Message): void {
 .hero {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(145deg, $primary 0%, $primary-pressed 100%);
+  background:
+    radial-gradient(circle at 82% 20%, rgba(255, 255, 255, 0.82), transparent 25%),
+    linear-gradient(145deg, #f1f9ff 0%, #dcefff 58%, #edf7ff 100%);
   /* 底部留出剪影带的高度，文案与剪影互不重叠 */
   padding-bottom: 196rpx;
 }
@@ -211,14 +213,14 @@ function goMessage(message: Message): void {
   left: 0;
   right: 0;
   bottom: 0;
-  background: $hero-overlay;
+  background: linear-gradient(105deg, rgba(255, 255, 255, 0.2), transparent 64%);
 }
 
 /* 装饰圆：同色系白色透明度，不引入新色相 */
 .hero__circle {
   position: absolute;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.32);
 }
 
 .hero__circle--lg {
@@ -226,8 +228,8 @@ function goMessage(message: Message): void {
   height: 320rpx;
   top: -140rpx;
   right: -70rpx;
-  border: 1rpx solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 0 0 34rpx rgba(255, 255, 255, 0.035), 0 0 0 72rpx rgba(255, 255, 255, 0.025);
+  border: 1rpx solid rgba(22, 119, 255, 0.08);
+  box-shadow: 0 0 0 34rpx rgba(255, 255, 255, 0.26), 0 0 0 72rpx rgba(255, 255, 255, 0.16);
 }
 
 .hero__circle--sm {
@@ -248,10 +250,18 @@ function goMessage(message: Message): void {
 }
 
 .hero__brand-name {
-  font-size: $font-label;
+  font-size: 30rpx;
   font-weight: 600;
-  color: $white;
+  color: $text-1;
   letter-spacing: 2rpx;
+}
+
+.hero__brand-sub {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  letter-spacing: 1rpx;
+  color: $text-2;
 }
 
 .hero__brand-tag {
@@ -259,28 +269,45 @@ function goMessage(message: Message): void {
   height: 34rpx;
   padding: 0 14rpx;
   border-radius: 17rpx;
-  border: 1rpx solid rgba(255, 255, 255, 0.48);
-  background: rgba(255, 255, 255, 0.12);
-  box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.16);
+  border: 1rpx solid rgba(22, 119, 255, 0.18);
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.7);
   font-size: 20rpx;
-  color: $white;
+  color: $primary;
   line-height: 32rpx;
 }
 
 .hero__greeting {
-  display: block;
-  margin-top: 32rpx;
-  font-size: 48rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  margin-top: 30rpx;
+  font-size: 46rpx;
   font-weight: 700;
   letter-spacing: 1rpx;
-  color: $white;
+  color: $text-1;
+}
+
+.hero__name,
+.hero__count {
+  color: $primary;
+  font-weight: 700;
+}
+
+.hero__date {
+  display: block;
+  margin-top: 14rpx;
+  font-size: 25rpx;
+  color: $text-2;
 }
 
 .hero__sub {
-  display: block;
-  margin-top: 16rpx;
-  font-size: $font-label;
-  color: rgba(255, 255, 255, 0.86);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: $text-2;
 }
 
 /* 剪影贴在品牌区底边，占满整条底带（与设计稿的校园底图构图一致） */
@@ -289,8 +316,8 @@ function goMessage(message: Message): void {
   right: 24rpx;
   bottom: -6rpx;
   z-index: 1;
-  opacity: 0.82;
-  transform: scale(1.04);
+  opacity: 0.84;
+  transform: scale(1.06);
   transform-origin: right bottom;
 }
 
@@ -298,8 +325,8 @@ function goMessage(message: Message): void {
 .stats {
   position: relative;
   z-index: 3;
-  padding: 18rpx;
-  margin: -28rpx 24rpx 0;
+  padding: 16rpx;
+  margin: -30rpx 20rpx 0;
   border: 1rpx solid rgba(229, 231, 235, 0.9);
   border-radius: 26rpx;
   background: $surface;
@@ -309,7 +336,7 @@ function goMessage(message: Message): void {
 .stats__row {
   display: flex;
   flex-direction: row;
-  margin-bottom: 12rpx;
+  align-items: stretch;
 }
 
 .stats__cell {
@@ -319,10 +346,6 @@ function goMessage(message: Message): void {
 
 .stats__cell + .stats__cell {
   margin-left: 12rpx;
-}
-
-.stats__row:last-child {
-  margin-bottom: 0;
 }
 
 /* ---------- 主体 ---------- */
